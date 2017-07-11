@@ -69,6 +69,11 @@ app_styles = {}
 
 def main(stdscr):
     deck_dir = None
+    symbols="unicode"
+    if "-a" in sys.argv:
+        symbols = "ascii"
+        sys.argv.remove("-a")
+
     if len(sys.argv) > 1:
         if os.path.exists(sys.argv[1]):
             deck_dir = sys.argv[1]
@@ -78,7 +83,7 @@ def main(stdscr):
 
     init_app_colors()
 
-    cardapp = Andeck(stdscr, deck_dir=deck_dir)
+    cardapp = Andeck(stdscr, deck_dir=deck_dir, symbols=symbols)
     stdscr.noutrefresh()
     cardapp.update_search()
     curses.doupdate()
@@ -301,7 +306,7 @@ class Andeck(object):
     Z = Card zoom mode
     """
 
-    def __init__(self, stdscr, deck_dir=None):
+    def __init__(self, stdscr, deck_dir=None, symbols="unicode"):
         self.screen = stdscr
 
         self.mode = "N"
@@ -338,6 +343,7 @@ class Andeck(object):
             self.download_cards(fluff=True)
 
         self.config.set("card-location", card_location)
+        cards.symb = cards.symbols[symbols]
         cards.load_cards(card_dir=card_location + "/netrunner-cards-json")
 
         self.filter = cards.CardFilter()

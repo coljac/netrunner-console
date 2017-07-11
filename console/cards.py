@@ -100,6 +100,8 @@ symbols = {
     }
 }
 
+symb = symbols['unicode']
+
 # TODO: Control image browser properly
 
 def download_cards(to_dir, progress):
@@ -191,7 +193,7 @@ class Card(object):
         print(self.get_image())
 
     def replace_special(self, string):
-        symb = symbols['unicode']
+        # symb = symbols['unicode']
         # symb = symbols['ascii']
         # CREDIT = "©"
         # RECURRING = "↺ "
