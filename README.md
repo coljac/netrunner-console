@@ -8,6 +8,10 @@ To help test, a web version *may* available here: http://console.coljac.space
 
 **Netrunner Console** requires Python 3 and support for the curses library, which should work out of the box on any Unix or Mac OS system. Because of spotty support for ncurses, Microsoft Windows support is a little tricky, and is still being worked on.
 
+Download or clone the repository, then run:
+
+`python setup.py install`
+
 ### Card data
 The card information is taken from zaroth's [handy repository](https://github.com/zaroth/netrunner-cards-json). You can point **Netrunner Console** at an existing copy of this data, or it will download the data on first run. Updating the cards can be done 
 Łukasz Dobrogowski
