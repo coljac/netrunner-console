@@ -13,8 +13,8 @@ Download or clone the repository, then run:
 `python setup.py install`
 
 ### Card data
-The card information is taken from zaroth's [handy repository](https://github.com/zaroth/netrunner-cards-json). You can point **Netrunner Console** at an existing copy of this data, or it will download the data on first run. Updating the cards can be done 
-Łukasz Dobrogowski
+The card information is taken from (Łukasz Dobrogowski) zaroth's [handy repository](https://github.com/zaroth/netrunner-cards-json). You can point **Netrunner Console** at an existing copy of this data, or it will download the data on first run. Updating the cards can be done from within the application.
+
 
 ## Configuration
 
