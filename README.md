@@ -23,6 +23,8 @@ By default, Netrunner Console will store some settings in `$HOME/.config/netrunn
 
 If a directory is passed as an argument to the script (e.g. `netrunner-console ~/Documents/anrdecks`), it will be used as the default deck location. Subsequently, the location of the last deck opened will be used as the default directory.
 
+If you pass the `-a` flag to the command (i.e. `netrunner-console -a`) it will use ascii instead of some unicode symbols for things like the credit, click and baselink symbols on cards. Use this if things look weird.
+
 ## Quick start
 
 - `> netrunner-console` to start
