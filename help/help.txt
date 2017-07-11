@@ -1,0 +1,98 @@
+# Console Help
+
+To quit: `<ESC>q`
+
+*Netrunner Console* starts in **normal mode**,
+where the following keys apply:
+
+Back to normal mode: `<ESC>`
+Cycle modes:         `<TAB>`
+Search mode:         `i, /, or a to append`
+Card list mode:      `<UP>, <DOWN>, j, k`
+Toggle deck window:  `d`
+Toggle card view:    `w`
+Card filter:         `f`
+Card table columns:  `t`
+Toggle runner cards: `r`
+Toggle corp cards:   `c`
+Download card data:  `C`
+
+Next: Search mode
+
+# Search mode
+
+Any typed text will filter to the cards that
+contain this in the card title or card text.
+For card symbols, use "[credit]", "[mu]", etc.
+
+Clear search, back to normal mode: `<ESC>`
+Keep search, back to normal mode:  `<ENTER>`
+Swap to card list mode:            `<TAB>`
+
+Next: Card list mode
+
+# Card list mode
+
+In this mode you can navigate the list of cards
+and get a more detailed view of any card.
+
+Down one card:       `j, <DOWN>`
+Up one card:         `k, <UP>`
+Go to top:           `K, <HOME>`
+Go to bottom:        `J, <END>`
+Next/prev page:      `<PAGE DOWN>/<PAGE UP>`
+Zoom card:           `<ENTER>, <SPACE>`
+Open in netrunnerdb: `n`
+Fetch card image:    `I`
+Search forward:      `/`
+Search backward:     `?`
+Add to current deck: `a, +`
+Remove from deck:    `x, -`
+
+Next: Deck edit mode
+
+# Deck edit mode
+
+When in this mode, you can load, save and edit decklists.
+Note that adding a corp card to a runner deck (and vice
+versa) will fail silently.
+
+Load a deck:       `l`
+New deck:          `n`
+Save/Save As:      `s/S`
+Rename:            `r`
+Zoom card:         `<ENTER>, <SPACE>`
+Add card:          `a, +`
+Remove card:       `x, -`
+
+Next: Filters
+
+# Filters
+
+Additional filters can be applied to the
+card list as well as the search text entered.
+Press "f" to access the filter view.
+
+When browsing a select list (e.g. keywords),
+use "/" and "?" to quickly search forward
+and backwards in the list.
+
+Toggle filter on/off: *Specified hotkey*
+Reset filters:        `R`
+Apply filters:        `<ENTER>`
+Cancel:               `<ESC>`
+
+Next: Table columns
+
+# Table columns
+
+Press "t" from normal mode to access the
+list of available table columns.
+
+When browsing the select list, use "/"
+and "?" to quickly search forward and
+backwards in the list.
+
+Display selected columns:  `<ENTER>`
+Cancel selection:          `<ESC>`
+
