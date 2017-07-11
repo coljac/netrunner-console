@@ -68,9 +68,11 @@ I consider the app to be in the testing phase at the moment (July 2017) - I expe
 
 For subsequent versions, planned enhancements include:
 
+- Documented Windows support
 - Sorting the card list 
 - Advanced search with boolean operators and card fields
 - Integration with netrunnerdb and jinteki.net stored decks
+- Potentially build out and properly support the web-based version
 - Improved colours and colour schemes
 - More customisable layout options
 - Performance and usability improvements
