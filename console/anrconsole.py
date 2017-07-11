@@ -123,6 +123,10 @@ def main(stdscr):
                     cardapp.help_mode()
                 elif c == ord("f"):
                     cardapp.filter_mode()
+                elif c == ord("D"):
+                    if not cardapp.deck_box_on:
+                        cardapp.deck_box_toggle()
+                    cardapp.deck_mode()
                 elif c == ord("C"):
                     cardapp.redownload()
 
