@@ -97,6 +97,17 @@ symbols = {
         "[link]": "☍",
         "[click]": "⏣",
         "[subroutine]": "↳"
+    },
+    "nerdfonts": {
+        "[credit]": "\ue7a7", # "\ue51e",
+        "[mu]": "\uf2db", #e066
+        "[recurring-credit]": "\uf46a\ue7a7",
+        "[influence]": "●",
+        "[trash]": "\uf014",
+        "[link]":  "\uf0c1", # "\uf127",
+        "[click]": "\uf464", # \uf49b  f43a
+        "[subroutine]": "↳",
+        "super_digits": "⁰¹²³⁴⁵\u2076\u2077\u2078\u2079"
     }
 }
 
@@ -319,9 +330,9 @@ def load_cards(card_dir=None):
     if len(cards_by_name) != 0:
         return
     if card_dir is None:
-        card_dir = os.environ["HOME"] + "/.config/netrunner-console/netrunner-cards-json"
+        card_dir = os.path.expanduser('~') + "/.config/netrunner-console/netrunner-cards-json"
     for filename in glob.glob(card_dir + "/pack/*.json"):
-        with open(filename, "r") as f:
+        with open(filename, "r", encoding="utf-8") as f:
             jobj = json.load(f)
             for card in jobj:
                 card_obj = Card(card)
@@ -331,7 +342,7 @@ def load_cards(card_dir=None):
                     if key not in ['title', 'text', 'code', 'flavor', 'illustrator', 'position']:
                         values_by_key[key].update([s.strip() for s in str(value).split(" - ")])
                         # values_by_key[key].add(value)
-    with open(card_dir + '/packs.json') as f:
+    with open(card_dir + '/packs.json', encoding="utf-8") as f:
         jobj = json.load(f)
         for pack in jobj:
             packs_by_code[pack['code']] = pack['name']

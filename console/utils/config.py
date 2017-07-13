@@ -10,10 +10,10 @@ class Config(object):
                 "default-deck-dir": ".",
                 }
 
-        if os.path.isdir(os.environ['HOME'] + "/.config"):
-            self.config_dir = os.environ["HOME"] + "/.config/netrunner-console"
+        if os.path.isdir(os.path.expanduser('~') + "/.config"):
+            self.config_dir = os.path.expanduser('~') + "/.config/netrunner-console"
         else:
-            self.config_dir = os.environ["HOME"] + "/.netrunner-console"
+            self.config_dir = os.path.expanduser('~') + "/.netrunner-console"
 
         self.config_file = self.config_dir + "/harmlessfile.json"
 

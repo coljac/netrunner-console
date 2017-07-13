@@ -5,7 +5,7 @@ setup(
     name='Netrunner Console',
     version='0.1',
     description="Terminal based Android: Netrunner deck builder",
-    long_description=open('README.md').read(),
+    long_description=open('README.md', encoding="utf-8").read(),
     author="Colin Jacobs",
     author_email="colin@coljac.net",
     url="https://github.com/coljac/netrunner-console",
