@@ -21,6 +21,7 @@ os.environ.setdefault('ESCDELAY', '15')
 # BUG: Neutral cards
 # BUG: Can crash on resize
 # BUG: Hidden panels briefly visible sometimes on startup and resize (delete)
+# BUG: Card name not wrapping properly in deck display
 # BUG: Crash when deleting last card in a deck
 # Traceback (most recent call last):
 #   File "/home/coljac/anaconda3/bin/netrunner-console", line 11, in <module>
@@ -211,7 +212,7 @@ def main(stdscr):
 
 
 def init_app_colors():
-    if False and curses.COLORS > 8: ## WINDOWS DEBUG
+    if curses.COLORS > 8: ## WINDOWS DEBUG
         curses.init_pair(1, 228, -1)
         curses.init_pair(2, 228, -1)
         curses.init_pair(3, 228, -1)
