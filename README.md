@@ -21,7 +21,7 @@ The card information is taken from (Łukasz Dobrogowski) zaroth's [handy reposit
 By default, Netrunner Console will store some settings in `$HOME/.config/netrunner-console` or `$HOME/.netrunner-console`.  Card data (~8MB) will be downloaded there also unless a card directory is specified with the environment variable 
 `ANR_CARD_DIR` which should contain `netrunner-cards-json` as per the above project. The location will be stored for subsequent runs.
 
-If a directory is passed as an argument to the script (e.g. `netrunner-console ~/Documents/anrdecks`), it will be used as the default deck location. Subsequently, the location of the last deck opened will be used as the default directory.
+If a file is passed as an argument (e.g. `netrunner-console mydeck.txt`), it will be loaded and displayed at startup. If a directory is passed as an argument (e.g. `netrunner-console ~/Documents/anrdecks`), it will be used as the default deck location. Subsequently, the location of the last deck opened will be used as the default directory.
 
 If you pass the `-a` flag to the command (i.e. `netrunner-console -a`) it will use ascii instead of some unicode symbols for things like the credit, click and baselink symbols on cards. Use this if things look weird.
 
