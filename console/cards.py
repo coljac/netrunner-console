@@ -20,7 +20,7 @@ packs_by_code = {}
 packs_by_name = {}
 
 trace_re = re.compile(r"<trace>[Tt]race (.)</trace>")
-cardline = re.compile(r'^\s*(\d[xX]?)?\s*([\w "\-:.]*)\s*(\(.*\))?\W*$')
+cardline = re.compile(r'^\s*(\d[xX]?)?\s*([\w\d :!&*,₂/;"\'\-.]*)\s*(\(.*\))?\W*$')
 
 def attr_to_readable(attr):
     return _attr_to_readable.get(attr, (attr.replace("_", " ").title(), attr))
@@ -118,7 +118,7 @@ symb = symbols['unicode']
 def download_cards(to_dir, progress):
     url = "https://github.com/zaroth/netrunner-cards-json/archive/master.zip"
     # url = "http://coljac.net/master.zip"
-    local_filename = "/tmp/netrunner-cards-json-master.zip"
+    local_filename = "./netrunner-cards-json-master.zip"
     r = requests.get(url, stream=True)
     i = 0
     with open(local_filename, 'wb') as f:
@@ -440,9 +440,9 @@ class Deck(object):
             deckstr += "1x "
         deckstr += str(self.identity) + "\n"
         for type_ in Deck.card_types[self.side]:
+            cards_in_type = sum([self.cards_qty[c] for c in self.cards_by_type[type_]])
             if pretty and len(self.cards_by_type[type_]) > 0:
-                deckstr += "\n%s (%d):\n" % (_attr_to_readable[type_][0],
-                        len(self.cards_by_type[type_]))
+                deckstr += "\n%s (%d):\n" % (_attr_to_readable[type_][0], cards_in_type)
             for card in self.cards_by_type[type_]:
                 deckstr += "%dx %s" % (self.cards_qty[card], card.title) + "\n"
         return deckstr
@@ -534,46 +534,3 @@ def test_load_deck():
 
 if __name__ == "__main__":
     load_cards()
-    print(len(cards_by_name))
-    cardlist = search("credits")
-    print(len(cardlist))
-    cardlist = search("credits", cardset=search("runner", fields=['side_code']))
-    print(len(cardlist))
-    cardlist = search("runner", fields=['side_code'], cardset=search("credits"))
-    print(len(cardlist))
-    cardlist = search(['anarch', 'shaper'],fields=['faction_code'], cardset=search("credits"))
-    print(len(cardlist))
-    cardlist = search("credits", cardset=search(['anarch', 'shaper'],fields=['faction_code']))
-    print(len(cardlist))
-
-    cardlist = search(['anarch', 'shaper'], fields=['faction_code'], invert=True, cardset=search("credits"))
-    print(len(cardlist))
-    cardlist = search("credits", cardset=search(['anarch', 'shaper'], fields=['faction_code'], invert=True))
-    print(len(cardlist))
-
-    cardlist = search(["credits", "HQ"], op="or")
-    print(len(cardlist))
-
-    cardlist = search(["credits", "HQ"], op="and", invert=True)
-    print(len(cardlist))
-
-    cardlist = search(["rezzes an asset"], invert=True)
-    print(len(cardlist))
-
-    f = lambda x: search([s for s in ["jinteki", "nbn"]],
-                               cardset=x,
-                               fields=['faction_code'], op="or", invert=False)
-
-    print(len(f(cardlist) ))
-
-    for key, value in values_by_key.items():
-        print(key + " - " + str(value))
-
-    filter = CardFilter()
-    filter.add_filter("side_code", "runner")
-    import copy
-    filter2 = copy.deepcopy(filter)
-    filter.add_filter("type_code", "agenda")
-
-    print(filter.filter_strings)
-    print(filter2.filter_strings)

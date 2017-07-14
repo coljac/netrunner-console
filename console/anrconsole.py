@@ -12,6 +12,8 @@ import shlex
 import threading
 
 os.environ.setdefault('ESCDELAY', '15')
+# BUG: Cards with apostraphes not importing Aesop Maker's eye
+
 # BUG: Resizing card window resets selected card index, display top (of course)
 # BUG: init_win doesn't preserve state properly e.g. display_top
 # BUG: credit symbol in two places (see col headers)
@@ -19,6 +21,26 @@ os.environ.setdefault('ESCDELAY', '15')
 # BUG: Neutral cards
 # BUG: Can crash on resize
 # BUG: Hidden panels briefly visible sometimes on startup and resize (delete)
+# BUG: Crash when deleting last card in a deck
+# Traceback (most recent call last):
+#   File "/home/coljac/anaconda3/bin/netrunner-console", line 11, in <module>
+#     load_entry_point('Netrunner-Console==0.1', 'console_scripts', 'netrunner-console')()
+#   File "/home/coljac/anaconda3/lib/python3.5/site-packages/Netrunner_Console-0.1-py3.5.egg/console/__init__.py", line 8, in main
+#     anrconsole.startapp()
+#   File "/home/coljac/anaconda3/lib/python3.5/site-packages/Netrunner_Console-0.1-py3.5.egg/console/anrconsole.py", line 1331, in startapp
+#     curses.wrapper(main)
+#   File "/home/coljac/anaconda3/lib/python3.5/curses/__init__.py", line 94, in wrapper
+#     return func(stdscr, *args, **kwds)
+#   File "/home/coljac/anaconda3/lib/python3.5/site-packages/Netrunner_Console-0.1-py3.5.egg/console/anrconsole.py", line 182, in main
+#     raise e
+#   File "/home/coljac/anaconda3/lib/python3.5/site-packages/Netrunner_Console-0.1-py3.5.egg/console/anrconsole.py", line 177, in main
+#     cardapp.keystroke(c)
+#   File "/home/coljac/anaconda3/lib/python3.5/site-packages/Netrunner_Console-0.1-py3.5.egg/console/anrconsole.py", line 628, in keystroke
+#     self.keystroke_deck(c)
+#   File "/home/coljac/anaconda3/lib/python3.5/site-packages/Netrunner_Console-0.1-py3.5.egg/console/anrconsole.py", line 687, in keystroke_deck
+#     self.display_card = self.deck.cards[self.selected_deck_card_index]
+# IndexError: list index out of range
+
 
 # Wontfix: Can't set background color properly
 # BUG: Cancelling filter change broken
@@ -34,6 +56,7 @@ os.environ.setdefault('ESCDELAY', '15')
 # TODO: Ascii/unicode check or config
 # TODO: Black background - doesn't work?
 # TODO: Initial help page depends on selected mode
+# TODO: Pass in deck as argument
 
 # Version 1 todos:
 # TODO: Advanced searching (or/and, other fields)
@@ -42,6 +65,7 @@ os.environ.setdefault('ESCDELAY', '15')
 # TODO: Download the card images, fancy image viewer
 # TODO: Refactor and document
 # TODO: Deck window size # Hardcoded for now
+# TODO: Check deck legality
 
 # Later todos:
 # TODO move card display window to side
@@ -61,14 +85,14 @@ os.environ.setdefault('ESCDELAY', '15')
 # Wishlist: Run HQ; card ascii art
 
 def error_log(string):
-    if True or False:
+    if True:
         with open("/tmp/error.log", "a") as log:
             log.write(string + "\n")
 
 app_styles = {}
 
 def main(stdscr):
-    deck_dir = None
+    deck_dir = deck_file = None
     symbols="unicode"
     if "-a" in sys.argv:
         symbols = "ascii"
@@ -76,14 +100,17 @@ def main(stdscr):
 
     if len(sys.argv) > 1:
         if os.path.exists(sys.argv[1]):
-            deck_dir = sys.argv[1]
+            if os.path.isdir(sys.argv[1]):
+                deck_dir = sys.argv[1]
+            else:
+                deck_file = sys.argv[1]
 
     curses.curs_set(False)
     curses.use_default_colors()
 
     init_app_colors()
 
-    cardapp = Andeck(stdscr, deck_dir=deck_dir, symbols=symbols)
+    cardapp = Andeck(stdscr, deck_dir=deck_dir, deck_file=deck_file, symbols=symbols)
     stdscr.noutrefresh()
     cardapp.update_search()
     curses.doupdate()
@@ -184,7 +211,7 @@ def main(stdscr):
 
 
 def init_app_colors():
-    if curses.COLORS > 8:
+    if False and curses.COLORS > 8: ## WINDOWS DEBUG
         curses.init_pair(1, 228, -1)
         curses.init_pair(2, 228, -1)
         curses.init_pair(3, 228, -1)
@@ -306,7 +333,7 @@ class Andeck(object):
     Z = Card zoom mode
     """
 
-    def __init__(self, stdscr, deck_dir=None, symbols="unicode"):
+    def __init__(self, stdscr, deck_dir=None, deck_file=None, symbols="unicode"):
         self.screen = stdscr
 
         self.mode = "N"
@@ -387,6 +414,9 @@ class Andeck(object):
             'keywords': 35,
             'flavor': -1
         })
+        if deck_file is not None and os.path.exists(deck_file):
+            self.deck_box_on = True
+            self.deck = cards.Deck.from_file(deck_file)
 
         self.init_windows()
         self.status("Loaded " + str(len(cards.cards_by_id)) + " cards.")
@@ -797,7 +827,6 @@ class Andeck(object):
         self.normal_mode()
 
     def keystroke_search(self, c):
-        # error_log(str(c))
         y, x = self.stdscr.getyx()
         if c < 0:
             curses.napms(10)
