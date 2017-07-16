@@ -9,7 +9,6 @@ import requests
 import shutil
 import time
 import zipfile
-
 imgurl = "https://netrunnerdb.com/card_image/"
 image_loc = "./images"
 
@@ -117,13 +116,16 @@ symb = symbols['unicode']
 
 def download_cards(to_dir, progress):
     url = "https://github.com/zaroth/netrunner-cards-json/archive/master.zip"
-    # url = "http://coljac.net/master.zip"
     local_filename = "./netrunner-cards-json-master.zip"
     r = requests.get(url, stream=True)
     i = 0
     with open(local_filename, 'wb') as f:
         file_size = None
+        tries = 0
         while not file_size:
+            tries += 1
+            if tries >= 10:
+                break
             file_size = r.headers.get('Content-Length', None)
             if file_size:
                 file_size = int(file_size)
@@ -180,14 +182,6 @@ class Card(object):
     def to_string_full(self):
         pass
 
-    def to_string(self, limit=9999):
-        # rules = self.text.replace("\n", " ").replace(
-        #     "<strong>", curses.A_NORMAL).replace("</strong>", curses.A_DIM)
-        # rules = self.replace_special(rules)
-        # return ("%s%s:%s %s%s" % (Style.BRIGHT, self.title, Style.NORMAL,
-        #                           Style.DIM, rules))[0:limit] + Style.RESET_ALL
-        pass
-
     def get_formatted(self, field, replace_newlines=True):
         string = self.d.get(field, "")
         if string == "":
@@ -204,28 +198,6 @@ class Card(object):
         print(self.get_image())
 
     def replace_special(self, string):
-        # symb = symbols['unicode']
-        # symb = symbols['ascii']
-        # CREDIT = "©"
-        # RECURRING = "↺ "
-        # CLICK = "⏣ "  # ⌀⌚ "🕐",
-        # MU = "⛫ "
-        # LINK = "☍"  # "⚯ " # ⚯☍
-        # ⌬  ⛃   ⛗
-        # ☍ (link?)
-        # ⍧   ⏎  ⏣ ◔
-        # super_digits = "⁰¹²³⁴⁵\u2076\u2077\u2078\u2079"
-        # TRASH = "🗑"
-        # replacements = {
-        #     "[subroutine]": "↳",
-        #     '[click]': CLICK,
-        #     "[credit]": CREDIT,
-        #     "[trash]": TRASH,
-        #     "[mu]": MU,
-        #     "[link]": LINK,
-        #     "[recurring-credit]": RECURRING + CREDIT,
-        # }
-        # for frm, to in replacements.items():
         for frm, to in symb.items():
             string = string.replace(frm, to)
         matches = re.search(trace_re, string)
@@ -316,14 +288,6 @@ class CardFilter(object):
     def get_filters(self, type_):
         return self.filters[type_]
 
-
-    # def copy(self):
-    #     return copy.copy(self)
-
-    # def __copy__(self):
-    #   newone = type(self)()
-    #   newone.__dict__.update(self.__dict__)
-    #   return newone
 
 
 def load_cards(card_dir=None):

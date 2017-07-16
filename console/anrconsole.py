@@ -23,25 +23,6 @@ os.environ.setdefault('ESCDELAY', '15')
 # BUG: Hidden panels briefly visible sometimes on startup and resize (delete)
 # BUG: Card name not wrapping properly in deck display
 # BUG: Crash when deleting last card in a deck
-# Traceback (most recent call last):
-#   File "/home/coljac/anaconda3/bin/netrunner-console", line 11, in <module>
-#     load_entry_point('Netrunner-Console==0.1', 'console_scripts', 'netrunner-console')()
-#   File "/home/coljac/anaconda3/lib/python3.5/site-packages/Netrunner_Console-0.1-py3.5.egg/console/__init__.py", line 8, in main
-#     anrconsole.startapp()
-#   File "/home/coljac/anaconda3/lib/python3.5/site-packages/Netrunner_Console-0.1-py3.5.egg/console/anrconsole.py", line 1331, in startapp
-#     curses.wrapper(main)
-#   File "/home/coljac/anaconda3/lib/python3.5/curses/__init__.py", line 94, in wrapper
-#     return func(stdscr, *args, **kwds)
-#   File "/home/coljac/anaconda3/lib/python3.5/site-packages/Netrunner_Console-0.1-py3.5.egg/console/anrconsole.py", line 182, in main
-#     raise e
-#   File "/home/coljac/anaconda3/lib/python3.5/site-packages/Netrunner_Console-0.1-py3.5.egg/console/anrconsole.py", line 177, in main
-#     cardapp.keystroke(c)
-#   File "/home/coljac/anaconda3/lib/python3.5/site-packages/Netrunner_Console-0.1-py3.5.egg/console/anrconsole.py", line 628, in keystroke
-#     self.keystroke_deck(c)
-#   File "/home/coljac/anaconda3/lib/python3.5/site-packages/Netrunner_Console-0.1-py3.5.egg/console/anrconsole.py", line 687, in keystroke_deck
-#     self.display_card = self.deck.cards[self.selected_deck_card_index]
-# IndexError: list index out of range
-
 
 # Wontfix: Can't set background color properly
 # BUG: Cancelling filter change broken
@@ -690,6 +671,8 @@ class Andeck(object):
             card = self.display_card
             self.deck.remove_card(card)
             self.status("Removed " + card.title)
+            self.selected_deck_card_index = min(self.selected_deck_card_index,
+                                                len(self.deck.cards) - 1)
         elif c == ord('j') or c == curses.KEY_DOWN or c == curses.KEY_NPAGE:
             increment = 10 if c == curses.KEY_NPAGE else 1
             self.selected_deck_card_index = min(
@@ -1155,37 +1138,35 @@ class Andeck(object):
 
         card_type = card.type_code
         win.addstr(2, 1, card.printable("type_code", verbose=verbose), curses.A_BOLD)
+        stats_string = ""
         if card.d.get("keywords", None):
             win.addstr(": " + card.printable("keywords", verbose=verbose))
         if card_type == "agenda":
-            win.addstr(" - AC/AP: %d/%d" % (card.advancement_cost, card.agenda_points))
-        elif card.d.get("strength", None) is not None:
-            win.addstr(" - ST: %d" % (card.strength), curses.A_BOLD)
-        if card.d.get("trash_cost", None) is not None:
-            win.addstr("  Trash: %d" % (card.trash_cost))
-        if card.d.get("memory_cost", None) is not None:
-            win.addstr("  MU: %d" % (card.memory_cost))
+            stats_string = "AC: %d  AP: %d " % (card.advancement_cost, card.agenda_points)
+        if card.d.get("strength"):
+            stats_string += ("ST: %d " % (card.strength))
+        if card.d.get("trash_cost"):
+            stats_string += "Trash: %d " % (card.trash_cost)
+        if card.d.get("memory_cost"):
+            stats_string += "MU: %d " % (card.memory_cost)
+        if card_type == "identity":
+            stats_string += "Deck size: %d  Influence: %d " % (card.minimum_deck_size, card.influence_limit)
 
         win.addstr(3, 1, card.printable("faction_code", verbose=verbose),
                    app_styles.get(card.faction_code, 0))
         influence = card.d.get("faction_cost", None)
+
         if influence is not None:
             win.addstr(" (")
             win.addstr("●" * card.faction_cost, app_styles['filled'])
             win.addstr("●" * (5 - card.faction_cost), app_styles['empty'])
             win.addstr(")")
 
-        # win.addstr(2, 16, "Cost: ", curses.A_BOLD)
-        # win.addstr(2, 22, str(card.d.get('cost', "-")))
 
+        win.addstr(4, 1, stats_string, curses.A_BOLD)
 
-        # win.addstr(2, 25,
-        #            card.printable('type_code', verbose=verbose),
-        #            curses.A_BOLD)
-
-
-        text_win_height = h - 4
-        subwin = win.derwin(text_win_height, w - 3, 4, 1)
+        text_win_height = h - 5
+        subwin = win.derwin(text_win_height, w - 3, 5, 1)
 
         wrapper = textwrap.TextWrapper(replace_whitespace=False, width= w - 4)
         text_lines = card.get_formatted(
@@ -1318,6 +1299,9 @@ class Andeck(object):
                 stdscr.addstr(start + 5, 45, "%02d%%" % (int(100*progress)))
             else:
                 stdscr.addstr(start + 5, 45, "."*i, app_styles['greenscreen'] + curses.A_BLINK)
+                if i == 15:
+                    progress_track = self.download_cards(fluff=False)
+
             i += 1
             time.sleep(1)
             stdscr.refresh()
