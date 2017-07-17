@@ -478,23 +478,14 @@ class Deck(object):
     def print(self):
         print(self.to_string())
 
-def test_load_deck():
-    load_cards()
-    import sys
-    new_card = cards_by_name["Stimhack"]
-    print(new_card)
-    old_card = cards_by_name["Diesel"]
-    deck = Deck.from_file(sys.argv[1], warn=True)
-    deck.print()
-    print("----")
-    deck.add_card(new_card)
-    deck.print()
-    print("----")
-    deck.remove_card(new_card)
-    deck.remove_card(old_card)
-    deck.remove_card(old_card)
-    deck.remove_card(old_card)
-    print(deck.to_string(pretty=True))
+def deck_sets(deck):
+    return set([c.pack_code for c in deck.cards])
 
 if __name__ == "__main__":
+    import sys
     load_cards()
+    deck = Deck.from_file(sys.argv[1])
+    print(deck.to_string(pretty=True))
+    for set_ in deck_sets(deck):
+        print(packs_by_code[set_])
+
