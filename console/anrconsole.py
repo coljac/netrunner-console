@@ -1149,8 +1149,9 @@ class Andeck(object):
             stats_string += "Trash: %d " % (card.trash_cost)
         if card.d.get("memory_cost"):
             stats_string += "MU: %d " % (card.memory_cost)
-        if card_type == "identity":
-            stats_string += "Deck size: %d  Influence: %d " % (card.minimum_deck_size, card.influence_limit)
+        if card_type == "identity" and "minimum_deck_size" in card.d and "influence_limit" in card.d:
+            stats_string += "Deck size: %s  Influence: %s " % (
+                    str(card.minimum_deck_size), (card.influence_limit))
 
         win.addstr(3, 1, card.printable("faction_code", verbose=verbose),
                    app_styles.get(card.faction_code, 0))
@@ -1202,6 +1203,10 @@ class Andeck(object):
         if self.mode == "Z":
             style = app_styles['selected'] # TODO bug
         box(win, style)
+        set_string = " %s %d " % (
+                cards.packs_by_code[card.pack_code], card.position)
+
+        win.addstr(h - 1, w - (len(set_string)) - 1, set_string, curses.A_DIM)
 
     def render_card(self, win, i, card, gattr):
         height, width = win.getmaxyx()
