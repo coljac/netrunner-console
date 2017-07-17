@@ -135,7 +135,7 @@ def download_cards(to_dir, progress):
         for chunk in r.iter_content():
             f.write(chunk)
             i += 1
-            if progress is not None and i % 100 == 0:
+            if progress is not None and file_size is not None and i % 100 == 0:
                 progress['progress'] = i/file_size
 
     zip_ref = zipfile.ZipFile(local_filename, 'r')
