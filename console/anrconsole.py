@@ -90,6 +90,9 @@ def main(stdscr):
     curses.curs_set(False)
     curses.use_default_colors()
 
+    # stdscr.border(0)
+    # stdscr.erase()
+
     init_app_colors()
 
     cardapp = Andeck(stdscr, deck_dir=deck_dir, deck_file=deck_file, symbols=symbols)
@@ -730,6 +733,8 @@ class Andeck(object):
                 return
             elif c == ord('a') or c == ord('+'):
                 card = self.display_card
+                if self.deck is None:
+                    self.deck = cards.Deck(name="New Deck")
                 if self.deck.add_card(card):
                     self.status("Added " + card.title)
                 else:
@@ -737,6 +742,8 @@ class Andeck(object):
                 self.update_deck_box()
             elif c == ord('x') or c == ord('-'):
                 card = self.display_card
+                if self.deck is None:
+                    self.deck = cards.Deck(name="New Deck")
                 self.deck.remove_card(card)
                 self.status("Removed " + card.title)
                 self.update_deck_box()
@@ -960,6 +967,7 @@ class Andeck(object):
         self.render_search()
         self.update_card_table()
         self.update_deck_box()
+        self.render_card_display()
         self.card_table_panel.top()
         self.filter_panel.bottom()
         self.status("")
@@ -1205,7 +1213,6 @@ class Andeck(object):
         box(win, style)
         set_string = " %s %d " % (
                 cards.packs_by_code[card.pack_code], card.position)
-
         win.addstr(h - 1, w - (len(set_string)) - 1, set_string, curses.A_DIM)
 
     def render_card(self, win, i, card, gattr):
@@ -1338,6 +1345,9 @@ class Andeck(object):
 if __name__ == "__main__":
     curses.wrapper(main)
 
-def startapp():
+def startapp(stdscr=None):
     # sys.stderr.close()
-    curses.wrapper(main)
+    if stdscr is None:
+        curses.wrapper(main)
+    else:
+        main(stdscr)
