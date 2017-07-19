@@ -1042,7 +1042,7 @@ class Andeck(object):
                 search_terms = shlex.split(self.search_string.replace("'", '').replace('"', ''))
             except ValueError:
                 search_terms = self.search_string
-        self.cardlist = cards.search(search_terms, op="and")
+        self.cardlist = cards.advanced_search(search_terms, op="and")
         self.cardlist = self.filter.filter(self.cardlist)
         self.cardlist.sort()
         self.selected_card_index = 0

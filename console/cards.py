@@ -75,6 +75,8 @@ search_abbrevs = {
     "type": "type_code",
     "name": "title",
     "t": "type_code",
+    "ac": "advancement_cost",
+    "ap": "agenda_points",
 }
 
 symbols = {
@@ -353,9 +355,14 @@ def advanced_search(searchterm,
                     op="and"):
     # search_re = re.compile(r"(\w*):(.*)")
     # TODO: replace cardset for AND operations?
+    if not searchterm:
+        return search("")
     search_re = re.compile(r"(\w*)([:><=]+)(.*)")
     sets = []
-    words = shlex.split(searchterm)
+    if type(searchterm) == str:
+        words = shlex.split(searchterm)
+    else:
+        words = searchterm
     for word in words:
         if word.lower() in ["and", "or"]:
             sets.append(word)
@@ -406,7 +413,11 @@ def advanced_search(searchterm,
 def search_numeric(operator, val, field, cardset=None, invert=False):
     if cardset is None:
         cardset = cards_by_id.values()
-    val = int(val)
+    try:
+        val = int(val)
+    except ValueError:
+        return cardset
+    
     results = set()
     for card in cardset:
         field_val = card.d.get(field, None)
