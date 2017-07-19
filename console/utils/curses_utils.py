@@ -356,19 +356,19 @@ class TextPager(object):
         maxwidth = max([len(s) for s in lines])
         if maxwidth < width - 2:
             # win.addstr(3, 1, "\n".join(["  " + line for line in lines]))
-            self.add_formatted_text(3, 1, "\n".join(["  " + line for line in lines]))
+            self.add_formatted_text(3, 1, "\n".join(["   " + line for line in lines]))
         else:
             wrapped = textwrap.TextWrapper(replace_whitespace=False, width=width - 2).wrap(
                 self.pages[self.current_page][1])
             # win.addstr(3, 1, "\n".join(wrapped[0:height - 4]))
-            self.add_formatted_text(3, 1, "\n".join(wrapped[0:height - 4]))
+            self.add_formatted_text(3, 1, "\n  ".join(wrapped[0:height - 4]))
 
         win.addstr(height -2, 0, ("%d of %d" % (self.current_page+1, len(self.pages))).center(width),
                    curses.color_pair(3)) # TODO: Can I reserve a few color pairs for the utils?
         if self.current_page < len(self.pages) - 1:
-            win.addstr(height - 2, width - 8, "Next >>>", curses.color_pair(23))
+            win.addstr(height - 2, width - 8, "Next >>>", curses.color_pair(24))
         if self.current_page > 0:
-            win.addstr(height - 2, 1, "<<< Prev", curses.color_pair(22))
+            win.addstr(height - 2, 1, "<<< Prev", curses.color_pair(24))
         self.win.box()
         self.win.refresh()
         curses.doupdate()

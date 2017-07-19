@@ -29,6 +29,8 @@ Clear search, back to normal mode: `<ESC>`
 Keep search, back to normal mode:  `<ENTER>`
 Swap to card list mode:            `<TAB>`
 
+Advanced search commands and tips are covered below.
+
 Next: Card list mode
 
 # Card list mode
@@ -95,4 +97,77 @@ backwards in the list.
 
 Display selected columns:  `<ENTER>`
 Cancel selection:          `<ESC>`
+
+# Searching (1/3)
+
+By default, the search will return the cards that
+contain all of the words you enter in either the
+name of the card or the card text.
+
+You can use quotation marks to group terms - `"top 3"`
+will return different results to `top 3` - the first
+returns cards containing the phrase "top 3", the
+second all cards containing the words "top" and "3"
+in any order.
+
+It's possible to search all of the card fields in
+various combinations by using advanced search terms
+(similar to *netrunnerdb*). The format `field:value`
+will search for cards containing the value in the
+specified field, using the full name or abbreviation.
+Numeric fields can also be searched using the
+operators below.
+
+Remember than any filters set will also apply to
+advanced search results.
+
+
+# Searching (2/3)
+
+**Card Fields**
+set, e:       set
+type, t:      type
+faction, f:   faction
+s, kw:        subtype/keywords
+side, d:      side
+a, flavor:    flavor text
+n, influence: influence limit
+p:            strength
+cost, o:      cost
+mem: memory   cost
+name, title:  title
+ac:           advancement cost
+ap:           agenda points
+
+**Numerical operators**
+=  is equal to
+!= is not equal to
+>  greater than
+<  less than
+<= less than or equal to
+>= greater than or equal to
+
+# Searching (3/3) - Examples
+
+**All Jinteki assets**
+`t:asset f:j`
+
+**Core set neutral ice**
+`e:core t:ice`
+
+**All agendas with advancement cost < 3**
+`t:agenda ac<3`
+
+**Assets that contain the word "credits" or "clicks"**
+`credits or clicks t:asset`
+
+**Weyland or Haas operations with cost > 1**
+`f:w or f:h t:oper o>1`
+
+**Code gates and barriers from terminal directive**
+`s:"code gate" or s:barrier e:td`
+
+**Note:** The keywords `and` (which is assumed) and `or`
+allow a little flexibility in combining search terms.
+(Buggy - use or terms first in the search as above)
 

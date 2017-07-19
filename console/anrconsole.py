@@ -994,6 +994,7 @@ class Andeck(object):
                     pagename = l[2:].strip()
                 else:
                     pagetext += l
+            self.help_pages.append((pagename, pagetext))
         TextPager(self.stdscr, self.help_pages, (30, 60)).show()
         self.render_card_display()
         self.normal_mode()
@@ -1041,7 +1042,7 @@ class Andeck(object):
             try:
                 search_terms = shlex.split(self.search_string.replace("'", '').replace('"', ''))
             except ValueError:
-                search_terms = self.search_string
+                search_terms = self.search_stringsearch("")
         self.cardlist = cards.advanced_search(search_terms, op="and")
         self.cardlist = self.filter.filter(self.cardlist)
         self.cardlist.sort()

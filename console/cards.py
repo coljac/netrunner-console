@@ -68,15 +68,25 @@ _attr_to_readable = {
 
 search_abbrevs = {
     "set": "pack_code",
-    "kw": "keywords",
-    "s": "side_code",
-    "side": "side_code",
-    "f": "flavor",
+    "e": "pack_code",
     "type": "type_code",
-    "name": "title",
     "t": "type_code",
+    "faction": "faction_code",
+    "f": "faction_code",
+    "s": "keywords",
+    "kw": "keywords",
+    "side": "side_code",
+    "d": "side_code",
+    "a": "flavor",
+    "flavor": "flavor",
+    "n": "influence_limit",
+    "influence": "influence_limit",
+    "p": "strength",
+    "mem": "memory_cost",
+    "name": "title",
     "ac": "advancement_cost",
     "ap": "agenda_points",
+    "o": "cost",
 }
 
 symbols = {
@@ -357,7 +367,7 @@ def advanced_search(searchterm,
     # TODO: replace cardset for AND operations?
     if not searchterm:
         return search("")
-    search_re = re.compile(r"(\w*)([:><=]+)(.*)")
+    search_re = re.compile(r"(\w*)([!:><=]+)(.*)")
     sets = []
     if type(searchterm) == str:
         words = shlex.split(searchterm)
@@ -374,8 +384,24 @@ def advanced_search(searchterm,
             o = m.group(2)
             term = m.group(3)
             if field in search_abbrevs:
-                field = search_abbrevs[field]
+                field = search_abbrevs.get(field, field)
             if o == ":":
+                if field == "side_code" and len(term) == 1:
+                    if term == "r":
+                        term = "runner"
+                    elif term == "c":
+                        term = "corp"
+                elif field == "faction_code" and len(term) == 1:
+                    if term == "-":
+                        term = "neutral"
+                    else:
+                        by_first_letter = [
+                            f for f in values_by_key[field]
+                            if f.startswith(term)
+                        ]
+                        if len(by_first_letter) == 1:
+                            term = by_first_letter[0]
+                        print("Searching for ", term)
                 result = search(
                     term,
                     fields=[field],
@@ -383,7 +409,8 @@ def advanced_search(searchterm,
                     invert=invert,
                     op=op)
             else:
-                result = search_numeric(o, term, field, cardset=cardset, invert=invert)
+                result = search_numeric(
+                    o, term, field, cardset=cardset, invert=invert)
             sets.append(set(result))
         else:
             sets.append(
@@ -398,7 +425,7 @@ def advanced_search(searchterm,
 
     resultset = set()
     resultset.update(sets[0])
-    nextop = None
+    nextop = op
     for r in sets[1:]:
         if r in ["and", "or"]:
             nextop = r
@@ -417,7 +444,7 @@ def search_numeric(operator, val, field, cardset=None, invert=False):
         val = int(val)
     except ValueError:
         return cardset
-    
+
     results = set()
     for card in cardset:
         field_val = card.d.get(field, None)
@@ -437,6 +464,8 @@ def search_numeric(operator, val, field, cardset=None, invert=False):
             matches = (field_val <= val)
         elif operator == ">=":
             matches = (field_val >= val)
+        elif operator == "!=":
+            matches = (field_val != val)
         if matches:
             results.add(card)
     return list(results)
@@ -619,4 +648,5 @@ if __name__ == "__main__":
     # print(deck.to_string(pretty=True))
     # for set_ in deck_sets(deck):
     # print(packs_by_code[set_])
-    print("\n".join([str(c) for c in advanced_search(" ".join(sys.argv[1:]))]))
+    print("\n".join(
+        [str(c) for c in advanced_search("t:ice cost<=4 o>=2 o!=3 f:wey")]))
