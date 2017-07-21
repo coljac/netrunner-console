@@ -1290,7 +1290,7 @@ class Andeck(object):
             return False
 
     def quit(self):
-        if not self.deck.saved:
+        if self.deck and not self.deck.saved:
             if(ConfirmCancel(self.stdscr, "Save changes to current deck?").show()):
                 return self.save_deck()
         return True
