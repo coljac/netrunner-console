@@ -514,6 +514,7 @@ class Deck(object):
         self.identity = None
         self.filename = None
         self.comments = ""
+        self.saved = True
 
     def add_card(self, card, qty=None):
         if self.side is not None and card.side_code != self.side:
@@ -525,12 +526,14 @@ class Deck(object):
         self.cards_qty[card] = qty
         if card.type_code == "identity":
             self.identity = card
+            self.saved = False
             return True
         ss = self.cards_by_type[card.type_code]
         if card not in ss:
             ss.append(card)
             ss.sort()
             self.order_cards()
+        self.saved = False
         return True
 
     def order_cards(self):
@@ -548,6 +551,7 @@ class Deck(object):
                 self.cards_by_type[card.type_code].remove(card)
         else:
             self.cards_qty[card] = qty
+        self.saved = False
         self.order_cards()
 
     def to_string(self, pretty=False):
@@ -572,8 +576,19 @@ class Deck(object):
     def save_to_dropbox(self):
         pass
 
-    def from_string(self):
-        pass
+    def save(self, filename=None):
+        if not filename:
+            filename = self.filename
+        if filename is not None:
+            with open(filename, "w") as f:
+                f.write(self.to_string(pretty=True))
+            self.saved = True
+            return True
+        return False
+
+    def print(self):
+        print(self.to_string())
+
 
     def from_file(filename, format=None, warn=False):
         with open(filename, "r") as f:
@@ -623,18 +638,6 @@ class Deck(object):
             print("\n".join(warnings))
 
         return deck
-
-    def save(self, filename=None):
-        if not filename:
-            filename = self.filename
-        if filename is not None:
-            with open(filename, "w") as f:
-                f.write(self.to_string(pretty=True))
-            return True
-        return False
-
-    def print(self):
-        print(self.to_string())
 
 
 def deck_sets(deck):

@@ -216,10 +216,11 @@ class ScrollableSelector(object):
 
 class FileChooser(ScrollableSelector):
 
-    def __init__(self, stdscr, directory, extensions):
+    def __init__(self, stdscr, directory, extensions, locked=False):
         self.directory = directory
         directories = []
         files = []
+        self.locked = locked
         self.extensions = extensions
         for root, dirs, files_ in os.walk(directory):
             directories.extend(sorted(dirs))
@@ -228,7 +229,7 @@ class FileChooser(ScrollableSelector):
             break
 
         files = sorted(files)
-        ScrollableSelector.__init__(self, stdscr, [".."] +  directories + files, "Choose file: ")
+        ScrollableSelector.__init__(self, stdscr, ([] if locked else [".."]) +  directories + files, "Choose file: ")
 
     # TODO: Enable enter path
     def handle_key(self, c):
@@ -409,18 +410,22 @@ class ConfirmCancel(object):
         self.stdscr = stdscr
         self.message = message
         self.selected = 0
+        self.height = 4
 
     def show(self):
         maxy, maxx = self.stdscr.getmaxyx()
-        height, width = 5, 30
-        y = int((maxy - height) / 2)
+        width = 30
+        wrapped = textwrap.TextWrapper(replace_whitespace=False, width=width - 2).wrap(self.message)
+        self.height += len(wrapped)
+        self.message = "\n ".join(wrapped)
+        y = int((maxy - self.height) / 2)
         x = int((maxx - width) / 2)
-        win = curses.newwin(height, width, y, x)
+        win = curses.newwin(self.height, width, y, x)
 
         self.update(win)
 
         while True:
-            c = win.getch()
+            c = self.stdscr.getch()
             if c == 32 or c == 10:
                 return (self.selected == 0)
             elif c == 27:
@@ -432,14 +437,14 @@ class ConfirmCancel(object):
         return self.selected == 0
 
     def update(self, win):
-        win.box()
         height, width = win.getmaxyx()
         win.addstr(1, 1, self.message)
-        attr = [curses.color_pair(1), curses.color_pair(1)]
-        attr[self.selected] = curses.color_pair(2)
+        attr = [curses.color_pair(28), curses.color_pair(28)]
+        attr[self.selected] = curses.color_pair(26)
 
-        win.addstr(3, int((width - 24)/2), "OK".center(10), attr[0])
-        win.addstr(3, int((width - 24)/2) + 14, "Cancel".center(10), attr[1])
+        win.addstr(self.height - 2, int((width - 24)/2), "OK".center(10), attr[0])
+        win.addstr(self.height - 2, int((width - 24)/2) + 14, "Cancel".center(10), attr[1])
+        win.box()
         win.refresh()
         # curses.doupdate()
 

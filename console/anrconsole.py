@@ -131,7 +131,8 @@ def main(stdscr):
                     cardapp.search_mode()
             elif cardapp.mode == "N":
                 if c == ord('q'):
-                    break
+                    if cardapp.quit():
+                        break
                 elif c == ord('a') or c == ord('i') or c == ord('/'):
                     cardapp.search_mode(append=(c == ord('a')))
                 elif c in [ord('j'), ord('k'), curses.KEY_DOWN, curses.KEY_UP]:
@@ -640,10 +641,13 @@ class Andeck(object):
         if c == 10 or c == 32:
             self.zoom_mode()
         if c == ord('n'):
-            self.deck = cards.Deck()
-            self.deck.name = "New deck"
+            if self.deck and not self.deck.saved:
+                if(ConfirmCancel(self.stdscr, "Discard changes to current deck?").show()):
+                    self.deck = cards.Deck()
+                    self.deck.name = "New deck"
+                self.redraw()
         elif c == ord('l'): # Load
-            filename = FileChooser(self.stdscr, self.deck_dir, "txt").choose()
+            filename = FileChooser(self.stdscr, self.deck_dir, "txt", locked=False).choose()
             if filename is not None and os.path.exists(filename):
                 self.deck = cards.Deck.from_file(filename)
                 self.status("Loaded " + filename)
@@ -652,18 +656,7 @@ class Andeck(object):
         elif c == ord('r'): # Rename
             self.deck.name = InputWindow(self.stdscr, prompt="New deck name:").get_string()
         elif c == ord('s') or c == ord('S'): # Save
-            if self.deck.filename is None or c == ord("S"):
-                self.deck.filename = self.config.get('default-deck-dir') + os.sep +\
-                                    InputWindow(self.stdscr, prompt="Enter filename:").get_string()
-
-            if self.deck.filename is not None:
-                result = self.deck.save()
-                if result:
-                    self.status("Deck saved to " + self.deck.filename)
-                else:
-                    self.status("ERROR: Couldn't save deck.", app_styles['error'])
-            else:
-                self.status("ERROR: No filename selected.", app_styles['error'])
+            self.save_deck(saveas=(c == ord('S')))
         elif c == ord('a') or c == ord('+'):
             card = self.display_card
             if self.deck.add_card(card):
@@ -697,6 +690,14 @@ class Andeck(object):
 
         self.update_deck_box()
         self.render_card_display()
+
+    def redraw(self):
+        self.stdscr.erase()
+        self.render_top()
+        self.update_deck_box()
+        self.render_card_display()
+        self.update_card_table()
+        self.update_search()
 
     def keystroke_cards(self, c):
         if self.card_search:
@@ -996,7 +997,7 @@ class Andeck(object):
                     pagetext += l
             self.help_pages.append((pagename, pagetext))
         TextPager(self.stdscr, self.help_pages, (30, 60)).show()
-        self.render_card_display()
+        self.redraw()
         self.normal_mode()
 
     def shape_window(self, ideal_size):
@@ -1258,6 +1259,42 @@ class Andeck(object):
         attr += app_styles.get(card.d.get(field, None), 0)
         return attr
 
+    def save_deck(self, saveas=False):
+        if not self.deck:
+            return
+        if self.deck.filename is None or saveas:
+            to_save = InputWindow(self.stdscr, prompt="Enter filename:").get_string()
+            if not to_save:
+                return False
+            if to_save.startswith("/"):
+                self.deck.filename = os.path.realpath(to_save)
+            else:
+                self.deck.filename = os.path.realpath(
+                    self.config.get('default-deck-dir') + os.sep + to_save)
+
+        if self.deck.filename is not None:
+            try:
+                self.deck.save()
+                result = True
+            except:
+                result = False
+            if result:
+                self.status("Deck saved to " + self.deck.filename)
+                return True
+            else:
+                self.status("ERROR: Couldn't save deck to " + self.deck.filename,
+                            app_styles['error'])
+                return False
+        else:
+            self.status("ERROR: No filename selected.", app_styles['error'])
+            return False
+
+    def quit(self):
+        if not self.deck.saved:
+            if(ConfirmCancel(self.stdscr, "Save changes to current deck?").show()):
+                return self.save_deck()
+        return True
+
     def toggle_filter_runnercorp(self, side):
         if side in self.filter.filter_strings['side_code']:
             self.filter.remove_filter('side_code', side)
@@ -1342,6 +1379,7 @@ class Andeck(object):
                 self.status("Downloading... %d%%" % (int(100*progress['progress'])))
             self.normal_mode()
             Dialog(self.stdscr, "Cards downloaded successfully.")
+        self.redraw()
 
 if __name__ == "__main__":
     curses.wrapper(main)
