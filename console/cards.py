@@ -596,19 +596,6 @@ class Deck(object):
                 deckstr += "%dx %s" % (self.cards_qty[card], card.title) + "\n"
         return deckstr
 
-    def save_to_dropbox(self):
-        pass
-
-    def save(self, filename=None):
-        if not filename:
-            filename = self.filename
-        if filename is not None:
-            with open(filename, "w") as f:
-                f.write(self.to_string(pretty=True))
-            self.saved = True
-            return True
-        return False
-
     def print(self):
         print(self.to_string())
 
@@ -662,6 +649,21 @@ class Deck(object):
 
         return deck
 
+    def save(self, filename=None):
+        if not filename:
+            filename = self.filename
+        if filename is not None:
+            try:
+                with open(filename, "w") as f:
+                    f.write(self.to_string(pretty=True))
+                return True
+            except FileNotFoundError:
+                return False
+        return False
+
+    def print(self):
+        print(self.to_string())
+ 
 
 def deck_sets(deck):
     return set([c.pack_code for c in deck.cards])
