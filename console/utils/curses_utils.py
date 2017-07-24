@@ -182,12 +182,16 @@ class ScrollableSelector(object):
         win.box()
         win.refresh()
 
+    def get_optimal_width(self):
+        x = self.stdscr.getmaxyx()[1]
+        return min(max([len(str(s)) + 5 for s in self.items]) + 2, x - 2)
+
     def choose(self):
         curses.noecho()
         y, x = self.stdscr.getmaxyx()
         height = min(len(self.items) + 5, y - 2)
         if len(self.items) > 0:
-            width = min(max([len(str(s)) + 5 for s in self.items]) + 2, x - 2)
+            width = self.get_optimal_width()
         else: 
             width = 10
         width = max(len(self.message), width)
@@ -290,6 +294,75 @@ class MultipleSelector(ScrollableSelector):
             return [self.items[i] for i in self.chosen if i>1]
         else:
             return [i-2 for i in self.chosen if i>1]
+
+class MultipleGroupSelector(MultipleSelector):
+    def __init__(self, stdscr, groups, message, chosen=None, return_values=True):
+        self.items = []
+        for group in groups:
+            self.items.append(group)
+            self.items.extend(group[1])
+
+        MultipleSelector.__init__(self, stdscr, self.items, message, return_values=return_values)
+        self.chosen = []
+        if chosen is not None:
+            self.chosen.extend([c + 2 for c in chosen]) # All, none exclude
+
+    def render_item(self, win, item, line, index):
+        width = win.getmaxyx()[1]
+        attr = curses.A_NORMAL
+        if index == self.selected:
+            attr = curses.A_REVERSE
+        if index > 1:
+            if index in self.chosen:
+                attr += curses.COLOR_RED
+                win.addstr(line, 1, "(*) ", attr)
+            else:
+                win.addstr(line, 1, "( ) ", attr)
+            if type(item) == str:
+                str_ = " " + item
+            else:
+                str_ = item[0]
+                attr += curses.A_BOLD
+
+            win.addstr(str_.ljust(width - 2), attr)
+        else:
+            win.addstr(line, 1, item.center(width -2, "-"), attr)
+
+    def get_optimal_width(self):
+        x = self.stdscr.getmaxyx()[1]
+        maxw = 0
+        for grp in self.items:
+            maxw = max(maxw, max([len(s) + 8 for s in grp[1]]), len(grp[0]))
+
+        return min(maxw, x - 2)
+
+
+    def handle_key(self, c):
+        if c == 32:
+            if type(self.items[self.selected]) == str:
+                return super(MultipleGroupSelector, self).handle_key(c)
+            else:
+                if self.selected in self.chosen:
+                    self.chosen.remove(self.selected)
+                else:
+                    self.chosen.append(self.selected)
+                for i in range(self.selected + 1, self.selected + 1 + len(self.items[self.selected][1])):
+                    if self.selected in self.chosen:
+                        if i not in self.chosen:
+                            self.chosen.append(i)
+                    else:
+                        if i in self.chosen:
+                            self.chosen.remove(i)
+
+            self.update()
+            return True
+        return super(MultipleGroupSelector, self).handle_key(c)
+
+    def get_chosen(self):
+        if self.return_values:
+            return [self.items[i] for i in self.chosen if i>1 and type(self.items[i]) == str]
+        else:
+            return [i-2 for i in self.chosen if i>1 and type(self.items[i]) == str]
 
 class TextPager(object):
     

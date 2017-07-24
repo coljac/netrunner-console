@@ -19,6 +19,7 @@ values_by_key = defaultdict(set)
 packs_by_code = {}
 packs_by_name = {}
 packs_by_cycle = defaultdict(set)
+cycles_by_code = {}
 
 trace_re = re.compile(r"<trace>[Tt]race (.)</trace>")
 cardline = re.compile(
@@ -347,9 +348,21 @@ def load_cards(card_dir=None):
             packs_by_code[pack['code']] = Pack(pack)
             packs_by_name[pack['name']] = Pack(pack)
             packs_by_cycle[pack['cycle_code']].add(Pack(pack))
+    with open(card_dir + "/cycles.json", encoding="utf-8") as f:
+        jobj = json.load(f)
+        for cycle in jobj:
+            cycles_by_code[cycle['code']] = Cycle(cycle)
 
     for k, v in values_by_key.items():
         values_by_key[k] = sorted(list(v))
+
+class Cycle(object):
+    def __init__(self, dict_):
+        self.name = dict_['name']
+        self.code = dict_['code']
+        self.position = dict_['position']
+        self.size = dict_['size']
+        self.rotated = dict_['rotated']
 
 class Pack(object):
     def __init__(self, dict_):

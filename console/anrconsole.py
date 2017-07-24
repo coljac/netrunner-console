@@ -31,6 +31,8 @@ os.environ.setdefault('ESCDELAY', '15')
 # BUG: forward/back search - flaky; weirdness if search hits last card
 # BUG - errors out if screen too small initially
 
+# Group packs by cycle
+# Name and save filters and searches
 
 # Alpha 1 todos:
 # TODO: Column headers a bit confusing; can be too narrow
@@ -797,10 +799,14 @@ class Andeck(object):
             self.render_filter()
             return
         elif c == ord("S"):
-            items = [cards.packs_by_code[c].name for c in cards.values_by_key['pack_code']]
+            # Group by cycle, ordered by date_release
+            items = [(cards.cycles_by_code[cycle.code].name, [p.name for p in
+                                                    sorted(cards.packs_by_cycle[cycle.code], key=lambda x: x.position)])
+                     for cycle in sorted(cards.cycles_by_code.values(), key=lambda x: x.position)]
+            # items = [cards.packs_by_code[c].name for c in cards.values_by_key['pack_code']]
             chosen = [i for i, v in enumerate(cards.values_by_key['pack_code']) if \
                       v in self.filter.filter_strings['pack_code']]
-            selected_keywords = MultipleSelector(self.stdscr, items, message="Set:",
+            selected_keywords = MultipleGroupSelector(self.stdscr, items, message="Set:",
                                                  chosen=chosen).choose()
             if selected_keywords is not None:
                 selected_packs = [cards.packs_by_name[n].code for n in selected_keywords]
