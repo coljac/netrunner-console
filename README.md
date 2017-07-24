@@ -2,7 +2,7 @@
 
 Fast, terminal-based *Android: Netrunner* card database and deck editor.
 
-To help test, a web version *may* available here: http://console.coljac.space
+A web-enabled version is available here: [netrunner.click](http://netrunner.click/)
 
 ## Installation
 
@@ -68,11 +68,10 @@ I consider the app to be in the testing phase at the moment (July 2017) - I expe
 
 For subsequent versions, planned enhancements include:
 
+- Build out and better support the web interface
 - Documented Windows support
 - Sorting the card list 
-- Advanced search with boolean operators and card fields
-- Integration with netrunnerdb and jinteki.net stored decks
-- Potentially build out and properly support the web-based version
+- Integration with netrunnerdb (and jinteki.net?) stored decks
 - Improved colours and colour schemes
 - More customisable layout options
 - Performance and usability improvements

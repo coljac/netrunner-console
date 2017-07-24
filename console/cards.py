@@ -6,6 +6,7 @@ import json
 import os
 import re
 import requests
+import shlex
 import shutil
 import time
 import zipfile
@@ -20,10 +21,13 @@ packs_by_name = {}
 packs_by_cycle = defaultdict(set)
 
 trace_re = re.compile(r"<trace>[Tt]race (.)</trace>")
-cardline = re.compile(r'^\s*(\d[xX]?)?\s*([\w\d :!&*,₂/;"\'\-.]*)\s*(\(.*\))?\W*$')
+cardline = re.compile(
+    r'^\s*(\d[xX]?)?\s*([\w\d :!&*,₂/;"\'\-.]*)\s*(\(.*\))?\W*$')
+
 
 def attr_to_readable(attr):
     return _attr_to_readable.get(attr, (attr.replace("_", " ").title(), attr))
+
 
 _attr_to_readable = {
     "title": ("Card", "Card"),
@@ -61,7 +65,29 @@ _attr_to_readable = {
     "corp": ("Corp", "C"),
     "advancement_cost": ("Advancement cost", "Adv"),
     "keywords": ("Keywords", "Keywords"),
+}
 
+search_abbrevs = {
+    "set": "pack_code",
+    "e": "pack_code",
+    "type": "type_code",
+    "t": "type_code",
+    "faction": "faction_code",
+    "f": "faction_code",
+    "s": "keywords",
+    "kw": "keywords",
+    "side": "side_code",
+    "d": "side_code",
+    "a": "flavor",
+    "flavor": "flavor",
+    "n": "influence_limit",
+    "influence": "influence_limit",
+    "p": "strength",
+    "mem": "memory_cost",
+    "name": "title",
+    "ac": "advancement_cost",
+    "ap": "agenda_points",
+    "o": "cost",
 }
 
 symbols = {
@@ -115,6 +141,7 @@ symb = symbols['unicode']
 
 # TODO: Control image browser properly
 
+
 def download_cards(to_dir, progress):
     url = "https://github.com/zaroth/netrunner-cards-json/archive/master.zip"
     local_filename = "./netrunner-cards-json-master.zip"
@@ -137,20 +164,22 @@ def download_cards(to_dir, progress):
             f.write(chunk)
             i += 1
             if progress is not None and file_size is not None and i % 100 == 0:
-                progress['progress'] = i/file_size
+                progress['progress'] = i / file_size
 
     zip_ref = zipfile.ZipFile(local_filename, 'r')
     # for name in zip_ref.namelist():
     #     zip_ref.extract(name, to_dir)
-    zip_ref.extractall(to_dir) # Overwrite?
+    zip_ref.extractall(to_dir)  # Overwrite?
     zip_ref.close()
     if os.path.exists(to_dir + "/netrunner-cards-json"):
         shutil.rmtree(to_dir + "/netrunner-cards-json")
-    os.rename(to_dir + "/netrunner-cards-json-master", to_dir + "/netrunner-cards-json")
+    os.rename(to_dir + "/netrunner-cards-json-master",
+              to_dir + "/netrunner-cards-json")
     os.remove(local_filename)
     load_cards(to_dir + "/netrunner-cards-json")
     progress['progress'] = 1
     return True
+
 
 class Card(object):
     def __init__(self, entries):
@@ -223,6 +252,7 @@ class Card(object):
     def __lt__(self, other):
         return self.title < other.title
 
+
 class CardFilter(object):
     # TODO - generate from cards
     filter_by = ['faction_code', 'side_code', 'type_code', 'pack_code']
@@ -232,11 +262,12 @@ class CardFilter(object):
 
         self.filter_strings = defaultdict(list)
 
-        self.filters = {'side': [],
-                        'faction_code': [],
-                        'type': [],
-                        'subtype': []
-                        }
+        self.filters = {
+            'side': [],
+            'faction_code': [],
+            'type': [],
+            'subtype': []
+        }
 
         i = 0
         keycodes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
@@ -279,7 +310,6 @@ class CardFilter(object):
                                    fields=[filter_type], op="or", invert=False)
         self.filters[filter_type] = [f]
 
-
     def filter(self, cardlist):
         for type_ in self.filters.keys():
             for f in self.filters[type_]:
@@ -290,12 +320,12 @@ class CardFilter(object):
         return self.filters[type_]
 
 
-
 def load_cards(card_dir=None):
     if len(cards_by_name) != 0:
         return
     if card_dir is None:
-        card_dir = os.path.expanduser('~') + "/.config/netrunner-console/netrunner-cards-json"
+        card_dir = os.path.expanduser(
+            '~') + "/.config/netrunner-console/netrunner-cards-json"
     for filename in glob.glob(card_dir + "/pack/*.json"):
         with open(filename, "r", encoding="utf-8") as f:
             jobj = json.load(f)
@@ -304,8 +334,12 @@ def load_cards(card_dir=None):
                 cards_by_id[card['code']] = card_obj
                 cards_by_name[card['title']] = card_obj
                 for key, value in card_obj.d.items():
-                    if key not in ['title', 'text', 'code', 'flavor', 'illustrator', 'position']:
-                        values_by_key[key].update([s.strip() for s in str(value).split(" - ")])
+                    if key not in [
+                            'title', 'text', 'code', 'flavor', 'illustrator',
+                            'position'
+                    ]:
+                        values_by_key[key].update(
+                            [s.strip() for s in str(value).split(" - ")])
                         # values_by_key[key].add(value)
     with open(card_dir + '/packs.json', encoding="utf-8") as f:
         jobj = json.load(f)
@@ -334,7 +368,124 @@ def card_by_id(card_id):
     return cards_by_id.get(card_id, None)
 
 
-def search(search, fields=["text", "title"], cardset=None, invert=False, op="or"):
+def advanced_search(searchterm,
+                    fields=['text', 'title'],
+                    cardset=None,
+                    invert=False,
+                    op="and"):
+    # search_re = re.compile(r"(\w*):(.*)")
+    # TODO: replace cardset for AND operations?
+    if not searchterm:
+        return search("")
+    search_re = re.compile(r"(\w*)([!:><=]+)(.*)")
+    sets = []
+    if type(searchterm) == str:
+        words = shlex.split(searchterm)
+    else:
+        words = searchterm
+    for word in words:
+        if word.lower() in ["and", "or"]:
+            sets.append(word)
+            continue
+
+        m = search_re.match(word)
+        if m:
+            field = m.group(1)
+            o = m.group(2)
+            term = m.group(3)
+            if field in search_abbrevs:
+                field = search_abbrevs.get(field, field)
+            if o == ":":
+                if field == "side_code" and len(term) == 1:
+                    if term == "r":
+                        term = "runner"
+                    elif term == "c":
+                        term = "corp"
+                elif field == "faction_code" and len(term) == 1:
+                    if term == "-":
+                        term = "neutral"
+                    else:
+                        by_first_letter = [
+                            f for f in values_by_key[field]
+                            if f.startswith(term)
+                        ]
+                        if len(by_first_letter) == 1:
+                            term = by_first_letter[0]
+                        print("Searching for ", term)
+                result = search(
+                    term,
+                    fields=[field],
+                    cardset=cardset,
+                    invert=invert,
+                    op=op)
+            else:
+                result = search_numeric(
+                    o, term, field, cardset=cardset, invert=invert)
+            sets.append(set(result))
+        else:
+            sets.append(
+                set(
+                    search(
+                        word,
+                        fields=fields,
+                        cardset=cardset,
+                        invert=invert,
+                        op=op)))
+        sets.append(op)
+
+    resultset = set()
+    resultset.update(sets[0])
+    nextop = op
+    for r in sets[1:]:
+        if r in ["and", "or"]:
+            nextop = r
+        else:
+            if nextop == "and":
+                resultset = resultset & r
+            else:
+                resultset = resultset | r
+    return list(resultset)
+
+
+def search_numeric(operator, val, field, cardset=None, invert=False):
+    if cardset is None:
+        cardset = cards_by_id.values()
+    try:
+        val = int(val)
+    except ValueError:
+        return cardset
+
+    results = set()
+    for card in cardset:
+        field_val = card.d.get(field, None)
+        if field_val is None:
+            continue
+        try:
+            field_val = int(field_val)
+        except ValueError:
+            continue
+        if operator == "=":
+            matches = (field_val == val)
+        elif operator == ">":
+            matches = (field_val > val)
+        elif operator == "<":
+            matches = (field_val < val)
+        elif operator == "<=":
+            matches = (field_val <= val)
+        elif operator == ">=":
+            matches = (field_val >= val)
+        elif operator == "!=":
+            matches = (field_val != val)
+        if matches:
+            results.add(card)
+    return list(results)
+
+
+def search(search,
+           fields=["text", "title"],
+           cardset=None,
+           invert=False,
+           op="or"):
     if cardset is None:
         cardset = cards_by_id.values()
 
@@ -346,8 +497,11 @@ def search(search, fields=["text", "title"], cardset=None, invert=False, op="or"
 
     results = set()
     for card in cardset:
-        field_texts = [card.d.get(field, "").lower() for field in fields]
-        is_in = [(any([search_term in field_text for field_text in field_texts])) for search_term in search_terms]
+        field_texts = [str(card.d.get(field, "")).lower() for field in fields]
+        is_in = [
+            (any([search_term in field_text for field_text in field_texts]))
+            for search_term in search_terms
+        ]
         to_add = any(is_in) if op == "or" else all(is_in)
         if (to_add and not invert) or (not to_add and invert):
             results.add(card)
@@ -355,19 +509,22 @@ def search(search, fields=["text", "title"], cardset=None, invert=False, op="or"
 
 
 class Deck(object):
-    card_types = { "runner": [ "event", "resource", "program", "hardware" ],
-            "corp": [ "operation", "ice", "agenda", "asset", "upgrade" ],
-                   None: []}
+    card_types = {
+        "runner": ["event", "resource", "program", "hardware"],
+        "corp": ["operation", "ice", "agenda", "asset", "upgrade"],
+        None: []
+    }
 
     def __init__(self, name=None):
         self.cards_qty = {}
         self.cards = []
         self.cards_by_type = defaultdict(list)
-        self.side = None # corp/runner
+        self.side = None  # corp/runner
         self.name = name
         self.identity = None
         self.filename = None
         self.comments = ""
+        self.saved = True
 
     def add_card(self, card, qty=None):
         if self.side is not None and card.side_code != self.side:
@@ -379,12 +536,14 @@ class Deck(object):
         self.cards_qty[card] = qty
         if card.type_code == "identity":
             self.identity = card
+            self.saved = False
             return True
         ss = self.cards_by_type[card.type_code]
         if card not in ss:
             ss.append(card)
             ss.sort()
             self.order_cards()
+        self.saved = False
         return True
 
     def order_cards(self):
@@ -402,6 +561,7 @@ class Deck(object):
                 self.cards_by_type[card.type_code].remove(card)
         else:
             self.cards_qty[card] = qty
+        self.saved = False
         self.order_cards()
 
     def to_string(self, pretty=False):
@@ -414,9 +574,11 @@ class Deck(object):
             deckstr += "1x "
         deckstr += str(self.identity) + "\n"
         for type_ in Deck.card_types[self.side]:
-            cards_in_type = sum([self.cards_qty[c] for c in self.cards_by_type[type_]])
+            cards_in_type = sum(
+                [self.cards_qty[c] for c in self.cards_by_type[type_]])
             if pretty and len(self.cards_by_type[type_]) > 0:
-                deckstr += "\n%s (%d):\n" % (_attr_to_readable[type_][0], cards_in_type)
+                deckstr += "\n%s (%d):\n" % (_attr_to_readable[type_][0],
+                                             cards_in_type)
             for card in self.cards_by_type[type_]:
                 deckstr += "%dx %s" % (self.cards_qty[card], card.title) + "\n"
         return deckstr
@@ -424,8 +586,19 @@ class Deck(object):
     def save_to_dropbox(self):
         pass
 
-    def from_string(self):
-        pass
+    def save(self, filename=None):
+        if not filename:
+            filename = self.filename
+        if filename is not None:
+            with open(filename, "w") as f:
+                f.write(self.to_string(pretty=True))
+            self.saved = True
+            return True
+        return False
+
+    def print(self):
+        print(self.to_string())
+
 
     def from_file(filename, format=None, warn=False):
         with open(filename, "r") as f:
@@ -446,8 +619,8 @@ class Deck(object):
                 continue
             qty = int(m.group(1).lower().replace("x", "")) if m.group(1) else 1
             cardname = m.group(2).strip()
-            setname = m.group(3) # Ignore
-  
+            setname = m.group(3)  # Ignore
+
             card = cards_by_name.get(cardname, None)
             if card is not None:
                 deck.side = card.side_code
@@ -462,7 +635,7 @@ class Deck(object):
                     deck.name = line
                 else:
                     deck.comments += line + "\n"
-  
+
         if not deck.name:
             if deck.identity:
                 deck.name = deck.identity.title
@@ -472,31 +645,15 @@ class Deck(object):
         deck.order_cards()
         deck.filename = filename
         if warn:
-            print( "\n".join(warnings))
+            print("\n".join(warnings))
 
         return deck
 
-    def save(self, filename=None):
-        if not filename:
-            filename = self.filename
-        if filename is not None:
-            with open(filename, "w") as f:
-                f.write(self.to_string(pretty=True))
-            return True
-        return False
-
-    def print(self):
-        print(self.to_string())
 
 def deck_sets(deck):
     return set([c.pack_code for c in deck.cards])
 
+
 if __name__ == "__main__":
     import sys
     load_cards()
-    # deck = Deck.from_file(sys.argv[1])
-    # print(deck.to_string(pretty=True))
-    # for set_ in deck_sets(deck):
-    #     print(packs_by_code[set_])
-    print(packs_by_code)
-
