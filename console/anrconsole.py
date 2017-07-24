@@ -148,7 +148,7 @@ def main(stdscr):
                     cardapp.redownload()
 
 
-                elif c == ord("t"):
+                elif c == ord('t'):
                     choices = [col for col in cardapp.available_columns if col not in ['title']]
                     got_back = MultipleSelector(stdscr, [cards.attr_to_readable(c)[0] for c in choices],
                                                             "Table columns:",
@@ -380,7 +380,7 @@ class Andeck(object):
         self.available_columns = self.card_columns + [ 'advancement_cost', 'keywords',
                                   'agenda_points', 'strength', 'trash_cost', 'memory_cost', 'base_link',
                                   'quantity', 'deck_limit', 'uniqueness', 'flavor',
-                                  'minimum_deck_size', 'illustrator']
+                                  'minimum_deck_size', 'illustrator', 'position']
         self.column_hotkeys = {}
         for col in self.available_columns:
             for c in col:
@@ -796,13 +796,13 @@ class Andeck(object):
             self.render_filter()
             return
         elif c == ord("S"):
-            items = [cards.packs_by_code[c] for c in cards.values_by_key['pack_code']]
+            items = [cards.packs_by_code[c].name for c in cards.values_by_key['pack_code']]
             chosen = [i for i, v in enumerate(cards.values_by_key['pack_code']) if \
                       v in self.filter.filter_strings['pack_code']]
             selected_keywords = MultipleSelector(self.stdscr, items, message="Set:",
                                                  chosen=chosen).choose()
             if selected_keywords is not None:
-                selected_packs = [cards.packs_by_name[n] for n in selected_keywords]
+                selected_packs = [cards.packs_by_name[n].code for n in selected_keywords]
                 self.filter.filter_strings['pack_code'] = selected_packs
                 self.filter.update_filter('pack_code')
             self.render_filter()
@@ -1212,7 +1212,7 @@ class Andeck(object):
             style = app_styles['selected'] # TODO bug
         box(win, style)
         set_string = " %s %d " % (
-                cards.packs_by_code[card.pack_code], card.position)
+                cards.packs_by_code[card.pack_code].name, card.position)
         win.addstr(h - 1, w - (len(set_string)) - 1, set_string, curses.A_DIM)
 
     def render_card(self, win, i, card, gattr):

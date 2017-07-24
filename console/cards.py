@@ -17,6 +17,7 @@ cards_by_name = {}
 values_by_key = defaultdict(set)
 packs_by_code = {}
 packs_by_name = {}
+packs_by_cycle = defaultdict(set)
 
 trace_re = re.compile(r"<trace>[Tt]race (.)</trace>")
 cardline = re.compile(r'^\s*(\d[xX]?)?\s*([\w\d :!&*,₂/;"\'\-.]*)\s*(\(.*\))?\W*$')
@@ -309,12 +310,21 @@ def load_cards(card_dir=None):
     with open(card_dir + '/packs.json', encoding="utf-8") as f:
         jobj = json.load(f)
         for pack in jobj:
-            packs_by_code[pack['code']] = pack['name']
-            packs_by_name[pack['name']] = pack['code']
+            packs_by_code[pack['code']] = Pack(pack)
+            packs_by_name[pack['name']] = Pack(pack)
+            packs_by_cycle[pack['cycle_code']].add(Pack(pack))
 
     for k, v in values_by_key.items():
         values_by_key[k] = sorted(list(v))
 
+class Pack(object):
+    def __init__(self, dict_):
+        self.name = dict_['name']
+        self.code = dict_['code']
+        self.cycle_code = dict_['cycle_code']
+        self.position = dict_['position']
+        self.size = dict_['size']
+        self.date_release = dict_['date_release']
 
 def card_by_name(name):
     return cards_by_name.get(name, None)
@@ -484,8 +494,9 @@ def deck_sets(deck):
 if __name__ == "__main__":
     import sys
     load_cards()
-    deck = Deck.from_file(sys.argv[1])
-    print(deck.to_string(pretty=True))
-    for set_ in deck_sets(deck):
-        print(packs_by_code[set_])
+    # deck = Deck.from_file(sys.argv[1])
+    # print(deck.to_string(pretty=True))
+    # for set_ in deck_sets(deck):
+    #     print(packs_by_code[set_])
+    print(packs_by_code)
 
