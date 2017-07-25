@@ -13,18 +13,20 @@ import zipfile
 imgurl = "https://netrunnerdb.com/card_image/"
 image_loc = "./images"
 
-cards_by_id = {}
-cards_by_name = {}
-values_by_key = defaultdict(set)
-packs_by_code = {}
-packs_by_name = {}
-packs_by_cycle = defaultdict(set)
-cycles_by_code = {}
-
 trace_re = re.compile(r"<trace>[Tt]race (.)</trace>")
 cardline = re.compile(
     r'^\s*(\d[xX]?)?\s*([\w\d :!&*,₂/;"\'\-.]*)\s*(\(.*\))?\W*$')
 
+cards = {}
+
+def init_db():
+    cards['cards_by_id'] = {}
+    cards['cards_by_name'] = {}
+    cards['values_by_key'] = defaultdict(set)
+    cards['packs_by_code'] = {}
+    cards['packs_by_name'] = {}
+    cards['packs_by_cycle'] = defaultdict(set)
+    cards['cycles_by_code'] = {}
 
 def attr_to_readable(attr):
     return _attr_to_readable.get(attr, (attr.replace("_", " ").title(), attr))
@@ -144,7 +146,8 @@ symb = symbols['unicode']
 
 
 def download_cards(to_dir, progress):
-    url = "https://github.com/zaroth/netrunner-cards-json/archive/master.zip"
+    # url = "https://github.com/zaroth/netrunner-cards-json/archive/master.zip"
+    url = "https://coljac.net/master.zip"
     local_filename = "./netrunner-cards-json-master.zip"
     r = requests.get(url, stream=True)
     i = 0
@@ -273,7 +276,7 @@ class CardFilter(object):
         i = 0
         keycodes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
         for k in ['faction_code', 'type_code', 'side_code']:
-            for v in values_by_key[k]:
+            for v in cards['values_by_key'][k]:
                 CardFilter.key_to_filter[keycodes[i]] = (k, v)
                 i += 1
 
@@ -322,8 +325,7 @@ class CardFilter(object):
 
 
 def load_cards(card_dir=None):
-    if len(cards_by_name) != 0:
-        return
+    init_db()
     if card_dir is None:
         card_dir = os.path.expanduser(
             '~') + "/.config/netrunner-console/netrunner-cards-json"
@@ -332,29 +334,29 @@ def load_cards(card_dir=None):
             jobj = json.load(f)
             for card in jobj:
                 card_obj = Card(card)
-                cards_by_id[card['code']] = card_obj
-                cards_by_name[card['title']] = card_obj
+                cards['cards_by_id'][card['code']] = card_obj
+                cards['cards_by_name'][card['title']] = card_obj
                 for key, value in card_obj.d.items():
                     if key not in [
                             'title', 'text', 'code', 'flavor', 'illustrator',
                             'position'
                     ]:
-                        values_by_key[key].update(
+                        cards['values_by_key'][key].update(
                             [s.strip() for s in str(value).split(" - ")])
-                        # values_by_key[key].add(value)
+                        # cards['values_by_key'][key].add(value)
     with open(card_dir + '/packs.json', encoding="utf-8") as f:
         jobj = json.load(f)
         for pack in jobj:
-            packs_by_code[pack['code']] = Pack(pack)
-            packs_by_name[pack['name']] = Pack(pack)
-            packs_by_cycle[pack['cycle_code']].add(Pack(pack))
+            cards['packs_by_code'][pack['code']] = Pack(pack)
+            cards['packs_by_name'][pack['name']] = Pack(pack)
+            cards['packs_by_cycle'][pack['cycle_code']].add(Pack(pack))
     with open(card_dir + "/cycles.json", encoding="utf-8") as f:
         jobj = json.load(f)
         for cycle in jobj:
-            cycles_by_code[cycle['code']] = Cycle(cycle)
+            cards['cycles_by_code'][cycle['code']] = Cycle(cycle)
 
-    for k, v in values_by_key.items():
-        values_by_key[k] = sorted(list(v))
+    for k, v in cards['values_by_key'].items():
+        cards['values_by_key'][k] = sorted(list(v))
 
 class Cycle(object):
     def __init__(self, dict_):
@@ -374,11 +376,11 @@ class Pack(object):
         self.date_release = dict_['date_release']
 
 def card_by_name(name):
-    return cards_by_name.get(name, None)
+    return cards['cards_by_name'].get(name, None)
 
 
 def card_by_id(card_id):
-    return cards_by_id.get(card_id, None)
+    return cards['cards_by_id'].get(card_id, None)
 
 
 def advanced_search(searchterm,
@@ -419,7 +421,7 @@ def advanced_search(searchterm,
                         term = "neutral"
                     else:
                         by_first_letter = [
-                            f for f in values_by_key[field]
+                            f for f in cards['values_by_key'][field]
                             if f.startswith(term)
                         ]
                         if len(by_first_letter) == 1:
@@ -462,7 +464,7 @@ def advanced_search(searchterm,
 
 def search_numeric(operator, val, field, cardset=None, invert=False):
     if cardset is None:
-        cardset = cards_by_id.values()
+        cardset = cards['cards_by_id'].values()
     try:
         val = int(val)
     except ValueError:
@@ -500,7 +502,7 @@ def search(search,
            invert=False,
            op="or"):
     if cardset is None:
-        cardset = cards_by_id.values()
+        cardset = cards['cards_by_id'].values()
 
     if search is None or len(search) == 0:
         return list(cardset)

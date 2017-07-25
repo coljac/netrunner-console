@@ -14,6 +14,7 @@ import threading
 os.environ.setdefault('ESCDELAY', '15')
 # BUG: Cards with apostraphes not importing Aesop Maker's eye
 
+# BUG: HTML showing up in card text <strong>
 # BUG: Resizing card window resets selected card index, display top (of course)
 # BUG: init_win doesn't preserve state properly e.g. display_top
 # BUG: credit symbol in two places (see col headers)
@@ -23,11 +24,13 @@ os.environ.setdefault('ESCDELAY', '15')
 # BUG: Hidden panels briefly visible sometimes on startup and resize (delete)
 # BUG: Card name not wrapping properly in deck display
 # BUG: Crash when deleting last card in a deck
+# Bug - bad wrapping on deck identity "Smoke"
 
 # Wontfix: Can't set background color properly
 # BUG: Cancelling filter change broken
 # BUG: Some card names not rendering properly as they are too long
 # BUG: Help overlaps card display bottom and is not redrawn
+# BUG: Baselink not shown on identities
 # BUG: forward/back search - flaky; weirdness if search hits last card
 # BUG - errors out if screen too small initially
 
@@ -41,6 +44,7 @@ os.environ.setdefault('ESCDELAY', '15')
 # TODO: Black background - doesn't work?
 # TODO: Initial help page depends on selected mode
 # TODO: Pass in deck as argument
+# TODO: Ctrl-L
 
 # Version 1 todos:
 # TODO: Advanced searching (or/and, other fields)
@@ -407,7 +411,7 @@ class Andeck(object):
             self.deck = cards.Deck.from_file(deck_file)
 
         self.init_windows()
-        self.status("Loaded " + str(len(cards.cards_by_id)) + " cards.")
+        self.status("Loaded " + str(len(cards.cards['cards_by_id'])) + " cards.")
 
     def previous_mode(self):
         if len(self.prev_mode) == 0:
@@ -786,8 +790,8 @@ class Andeck(object):
         elif c == 10:
             pass
         elif c == ord("A"):
-            items = cards.values_by_key['keywords']
-            chosen = [i for i, v in enumerate(cards.values_by_key['keywords']) if \
+            items = cards.cards['values_by_key']['keywords']
+            chosen = [i for i, v in enumerate(cards.cards['values_by_key']['keywords']) if \
                     v in self.filter.filter_strings['keywords']]
             selected_keywords = MultipleSelector(self.stdscr, items, message="Keywords:",
                                                  chosen=chosen).choose()
@@ -800,16 +804,16 @@ class Andeck(object):
             return
         elif c == ord("S"):
             # Group by cycle, ordered by date_release
-            items = [(cards.cycles_by_code[cycle.code].name, [p.name for p in
-                                                    sorted(cards.packs_by_cycle[cycle.code], key=lambda x: x.position)])
-                     for cycle in sorted(cards.cycles_by_code.values(), key=lambda x: x.position)]
-            # items = [cards.packs_by_code[c].name for c in cards.values_by_key['pack_code']]
-            chosen = [i for i, v in enumerate(cards.values_by_key['pack_code']) if \
+            items = [(cards.cards['cycles_by_code'][cycle.code].name, [p.name for p in
+                                                    sorted(cards.cards['packs_by_cycle'][cycle.code], key=lambda x: x.position)])
+                     for cycle in sorted(cards.cards['cycles_by_code'].values(), key=lambda x: x.position)]
+            # items = [cards.cards['packs_by_code'][c].name for c in cards.cards['values_by_key']['pack_code']]
+            chosen = [i for i, v in enumerate(cards.cards['values_by_key']['pack_code']) if \
                       v in self.filter.filter_strings['pack_code']]
             selected_keywords = MultipleGroupSelector(self.stdscr, items, message="Set:",
                                                  chosen=chosen).choose()
             if selected_keywords is not None:
-                selected_packs = [cards.packs_by_name[n].code for n in selected_keywords]
+                selected_packs = [cards.cards['packs_by_name'][n].code for n in selected_keywords]
                 self.filter.filter_strings['pack_code'] = selected_packs
                 self.filter.update_filter('pack_code')
             self.render_filter()
@@ -1220,7 +1224,7 @@ class Andeck(object):
             style = app_styles['selected'] # TODO bug
         box(win, style)
         set_string = " %s %d " % (
-                cards.packs_by_code[card.pack_code].name, card.position)
+                cards.cards['packs_by_code'][card.pack_code].name, card.position)
         win.addstr(h - 1, w - (len(set_string)) - 1, set_string, curses.A_DIM)
 
     def render_card(self, win, i, card, gattr):
@@ -1384,8 +1388,12 @@ class Andeck(object):
             while progress['progress'] < 1.0:
                 self.status("Downloading... %d%%" % (int(100*progress['progress'])))
             self.normal_mode()
-            Dialog(self.stdscr, "Cards downloaded successfully.")
+            Dialog(self.stdscr, "Cards downloaded successfully.").show()
+            cards.load_cards(card_dir=self.config.get('card-location') + "/netrunner-cards-json")
+            self.search_string = ""
+            self.update_search()
         self.redraw()
+        self.status("Loaded " + str(len(cards.cards['cards_by_name'].values())) + " cards.")
 
 if __name__ == "__main__":
     curses.wrapper(main)
