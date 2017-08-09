@@ -387,7 +387,7 @@ class Andeck(object):
         self.available_columns = self.card_columns + [ 'advancement_cost', 'keywords',
                                   'agenda_points', 'strength', 'trash_cost', 'memory_cost', 'base_link',
                                   'quantity', 'deck_limit', 'uniqueness', 'flavor',
-                                  'minimum_deck_size', 'illustrator', 'position']
+                                  'minimum_deck_size', 'illustrator', 'position', 'influence_limit']
         self.column_hotkeys = {}
         for col in self.available_columns:
             for c in col:
@@ -396,7 +396,7 @@ class Andeck(object):
                     break
 
         self.search_fields = ["title", "text"]
-        self.column_widths = defaultdict(lambda: 1)
+        self.column_widths = defaultdict(lambda: 2)
         self.column_widths.update({
             "title": 25,
             "text": -1,  # Rest of available space
