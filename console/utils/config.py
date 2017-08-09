@@ -8,6 +8,7 @@ class Config(object):
                 "card-location": None,
                 "image-location": None,
                 "default-deck-dir": ".",
+                "saved-filters": []
                 }
 
         if os.path.isdir(os.path.expanduser('~') + "/.config"):
@@ -43,13 +44,4 @@ class Config(object):
         loaded = json.load(self.config_file)
         self.conf.update(loaded)
         
-
-if __name__ == "__main__":
-    conf = Config()
-    print(conf.get('default-deck-dir'))
-    print(conf.get('deck-window'))
-    print(conf.get('card-location'))
-    conf.set("deck-window", "True")
-
-    conf.save()
 

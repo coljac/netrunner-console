@@ -144,10 +144,10 @@ symb = symbols['unicode']
 
 # TODO: Control image browser properly
 
+init_db()
 
 def download_cards(to_dir, progress):
-    # url = "https://github.com/zaroth/netrunner-cards-json/archive/master.zip"
-    url = "https://coljac.net/master.zip"
+    url = "https://github.com/zaroth/netrunner-cards-json/archive/master.zip"
     local_filename = "./netrunner-cards-json-master.zip"
     r = requests.get(url, stream=True)
     i = 0
@@ -263,6 +263,7 @@ class CardFilter(object):
     key_to_filter = {}
 
     def __init__(self):
+        self.name = None
 
         self.filter_strings = defaultdict(list)
 
@@ -671,6 +672,3 @@ def deck_sets(deck):
     return set([c.pack_code for c in deck.cards])
 
 
-if __name__ == "__main__":
-    import sys
-    load_cards()
