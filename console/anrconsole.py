@@ -571,7 +571,7 @@ class Andeck(object):
 
         # TODO: store this, don't create each time
         if not self.deck_pad:
-            self.deck_pad = curses.newpad(70, width - 2)
+            self.deck_pad = curses.newpad(270, width - 2)
         deck_pad = self.deck_pad
         deck_pad.erase()
 
@@ -697,6 +697,7 @@ class Andeck(object):
 
         self.update_deck_box()
         self.render_card_display()
+        self.update_image_window()
 
     def redraw(self):
         self.stdscr.erase()
