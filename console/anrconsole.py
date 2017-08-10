@@ -10,6 +10,7 @@ from collections import defaultdict
 import sys
 import shlex
 import threading
+from . import cardwindow
 
 os.environ.setdefault('ESCDELAY', '15')
 # BUG: Cards with apostraphes not importing Aesop Maker's eye
@@ -736,7 +737,10 @@ class Andeck(object):
                 self.card_search = "forwards" if c == ord('/') else "backwards"
                 self.list_search = ""
             elif c == ord('I'):
-                self.display_image()
+                if cardwindow.is_image_window():
+                    self.close_image_window()
+                else:
+                    self.display_image_window()
                 return
             elif c == ord('a') or c == ord('+'):
                 card = self.display_card
@@ -1082,6 +1086,7 @@ class Andeck(object):
         if self.selected_card_index >= len(self.cardlist):
             self.selected_card_index = 0
         self.display_card = self.cardlist[self.selected_card_index]
+        self.update_image_window()
 
     def update_card_table(self):
         # Window gets column headers
@@ -1303,6 +1308,7 @@ class Andeck(object):
         if self.deck and not self.deck.saved:
             if(ConfirmCancel(self.stdscr, "Save changes to current deck?").show()):
                 return self.save_deck()
+        self.close_image_window()
         return True
 
     def toggle_filter_runnercorp(self, side):
@@ -1319,7 +1325,31 @@ class Andeck(object):
     def toggle_filter_runner(self):
         self.toggle_filter_runnercorp("runner")
 
-    def display_image(self):
+    def display_image_window(self):
+        geometry = self.config.get("window-geometry")
+        card = self.display_card
+        if card is None:
+            return
+        cardid = card.code
+        cardwindow.show_image_window(card=cardid, geometry=geometry)
+
+    def close_image_window(self):
+        if not cardwindow.is_image_window():
+            return
+        geometry = cardwindow.close_image_window()
+        self.config.set("window-geometry", geometry)
+
+       
+    def update_image_window(self):
+        if not cardwindow.is_image_window():
+            return
+        card = self.display_card
+        if card is None:
+            return
+        cardwindow.update_image_window(card.code)
+        
+
+    def display_image_web(self):
         card = self.display_card
         if card is None:
             return
