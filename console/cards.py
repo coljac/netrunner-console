@@ -624,7 +624,7 @@ class Deck(object):
             cardname = m.group(2).strip()
             setname = m.group(3)  # Ignore
 
-            card = cards_by_name.get(cardname, None)
+            card = cards['cards_by_name'].get(cardname, None)
             if card is not None:
                 deck.side = card.side_code
                 if card.type_code == "identity":

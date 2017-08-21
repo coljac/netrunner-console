@@ -40,8 +40,11 @@ def _show_image_window(card, geometry):
     window.configure(background='white')
 
     image_file = image_location + "/" + card + ".png"
-    img = ImageTk.PhotoImage(Image.open(image_file))
-    w = tk.Label(window, image=img)
+    try:
+        img = ImageTk.PhotoImage(Image.open(image_file))
+        w = tk.Label(window, image=img)
+    except IOError:
+        w = tk.Label(window, image=None)
     windows.append(w)
     
     w.pack(side="bottom", fill="both", expand="yes")
@@ -52,7 +55,10 @@ def _show_image_window(card, geometry):
 def update_image_window(card="00001"):
     w = windows[1]
     image_file = image_location + "/" + card + ".png"
-    img = ImageTk.PhotoImage(Image.open(image_file))
+    try:
+        img = ImageTk.PhotoImage(Image.open(image_file))
+    except IOError:
+        return
     w.configure(image=img)
     windows.append(img)
     # sys.stderr.write(windows[0].geometry)
