@@ -19,6 +19,7 @@ cardline = re.compile(
 
 cards = {}
 
+
 def init_db():
     cards['cards_by_id'] = {}
     cards['cards_by_name'] = {}
@@ -27,6 +28,7 @@ def init_db():
     cards['packs_by_name'] = {}
     cards['packs_by_cycle'] = defaultdict(set)
     cards['cycles_by_code'] = {}
+
 
 def attr_to_readable(attr):
     return _attr_to_readable.get(attr, (attr.replace("_", " ").title(), attr))
@@ -146,6 +148,7 @@ symb = symbols['unicode']
 
 init_db()
 
+
 def download_cards(to_dir, progress):
     url = "https://github.com/zaroth/netrunner-cards-json/archive/master.zip"
     local_filename = "./netrunner-cards-json-master.zip"
@@ -186,14 +189,25 @@ def download_cards(to_dir, progress):
 
 
 class Card(object):
+
+    nonascii = re.compile(r'[^\x00-\x7F]')
+    replaceables = ["éüāūōàö₂Şó", "euauoai2So"]
+
     def __init__(self, entries):
         self.text = ""
         self.d = entries
         self.__dict__.update(**entries)
+        self.searchable_title = self.title
+        matches = re.search(Card.nonascii, self.title)
+        if matches:
+            for i, c in enumerate(Card.replaceables[0]):
+                self.searchable_title = self.searchable_title.replace(
+                    c, Card.replaceables[1][i])
+        self.d['searchable_title'] = self.searchable_title
 
     def __str__(self):
         return (self.title)
-
+ 
     def __repr__(self):
         return self.title + " | " + self.code
 
@@ -359,6 +373,7 @@ def load_cards(card_dir=None):
     for k, v in cards['values_by_key'].items():
         cards['values_by_key'][k] = sorted(list(v))
 
+
 class Cycle(object):
     def __init__(self, dict_):
         self.name = dict_['name']
@@ -366,6 +381,7 @@ class Cycle(object):
         self.position = dict_['position']
         self.size = dict_['size']
         self.rotated = dict_['rotated']
+
 
 class Pack(object):
     def __init__(self, dict_):
@@ -375,6 +391,7 @@ class Pack(object):
         self.position = dict_['position']
         self.size = dict_['size']
         self.date_release = dict_['date_release']
+
 
 def card_by_name(name):
     return cards['cards_by_name'].get(name, None)
@@ -393,6 +410,8 @@ def advanced_search(searchterm,
     # TODO: replace cardset for AND operations?
     if not searchterm:
         return search("")
+
+
     search_re = re.compile(r"(\w*)([!:><=]+)(.*)")
     sets = []
     if type(searchterm) == str:
@@ -508,6 +527,11 @@ def search(search,
     if search is None or len(search) == 0:
         return list(cardset)
 
+    if "title" in fields:
+        if not re.search(Card.nonascii, search):
+            fields.remove("title")
+            fields.append('searchable_title')
+
     search_terms = [search.lower()] if type(search) == str else \
             [s.lower() for s in search]
 
@@ -602,7 +626,6 @@ class Deck(object):
     def print(self):
         print(self.to_string())
 
-
     def from_file(filename, format=None, warn=False):
         with open(filename, "r") as f:
             lines = f.readlines()
@@ -649,7 +672,7 @@ class Deck(object):
         deck.filename = filename
         if warn:
             print("\n".join(warnings))
-
+        deck.saved = True
         return deck
 
     def save(self, filename=None):
@@ -666,9 +689,7 @@ class Deck(object):
 
     def print(self):
         print(self.to_string())
- 
+
 
 def deck_sets(deck):
     return set([c.pack_code for c in deck.cards])
-
-
