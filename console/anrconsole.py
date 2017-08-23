@@ -119,7 +119,10 @@ def main(stdscr):
                 # TODO
             elif c == 27 and cardapp.mode != "F":
                 if cardapp.mode == "N":
-                    cardapp.search_string = ""
+                    if cardapp.search_string == "":
+                        cardapp.filter.reset()
+                    else:
+                        cardapp.search_string = ""
                     cardapp.update_search()
                 cardapp.normal_mode()
             elif c == 9: # Tab
