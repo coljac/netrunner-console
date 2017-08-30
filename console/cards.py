@@ -10,6 +10,7 @@ import shlex
 import shutil
 import time
 import zipfile
+
 imgurl = "https://netrunnerdb.com/card_image/"
 image_loc = "./images"
 
@@ -207,7 +208,7 @@ class Card(object):
 
     def __str__(self):
         return (self.title)
- 
+
     def __repr__(self):
         return self.title + " | " + self.code
 
@@ -338,6 +339,10 @@ class CardFilter(object):
     def get_filters(self, type_):
         return self.filters[type_]
 
+    # def toJSON(self):
+        # return json.dumps(
+            # self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
 
 def load_cards(card_dir=None):
     init_db()
@@ -410,7 +415,6 @@ def advanced_search(searchterm,
     # TODO: replace cardset for AND operations?
     if not searchterm:
         return search("")
-
 
     search_re = re.compile(r"(\w*)([!:><=]+)(.*)")
     sets = []

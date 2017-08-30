@@ -13,6 +13,7 @@ import threading
 from . import cardwindow
 
 os.environ.setdefault('ESCDELAY', '15')
+
 # BUG: Cards with apostraphes not importing Aesop Maker's eye
 
 # BUG: HTML showing up in card text <strong>
@@ -73,16 +74,19 @@ os.environ.setdefault('ESCDELAY', '15')
 
 # Wishlist: Run HQ; card ascii art
 
+
 def error_log(string):
     if True:
         with open("/tmp/error.log", "a") as log:
             log.write(string + "\n")
 
+
 app_styles = {}
+
 
 def main(stdscr):
     deck_dir = deck_file = None
-    symbols="unicode"
+    symbols = "unicode"
     if "-a" in sys.argv:
         symbols = "ascii"
         sys.argv.remove("-a")
@@ -102,7 +106,8 @@ def main(stdscr):
 
     init_app_colors()
 
-    cardapp = Andeck(stdscr, deck_dir=deck_dir, deck_file=deck_file, symbols=symbols)
+    cardapp = Andeck(
+        stdscr, deck_dir=deck_dir, deck_file=deck_file, symbols=symbols)
     stdscr.noutrefresh()
     cardapp.update_search()
     curses.doupdate()
@@ -125,7 +130,7 @@ def main(stdscr):
                         cardapp.search_string = ""
                     cardapp.update_search()
                 cardapp.normal_mode()
-            elif c == 9: # Tab
+            elif c == 9:  # Tab
                 mode = cardapp.mode
                 cardapp.normal_mode()
                 if mode == "N":
@@ -158,16 +163,20 @@ def main(stdscr):
                 elif c == ord("C"):
                     cardapp.redownload()
 
-
                 elif c == ord('t'):
-                    choices = [col for col in cardapp.available_columns if col not in ['title']]
+                    choices = [
+                        col for col in cardapp.available_columns
+                        if col not in ['title']
+                    ]
                     got_back = MultipleSelector(stdscr, [cards.attr_to_readable(c)[0] for c in choices],
                                                             "Table columns:",
                                              chosen=[i for i,v in enumerate(choices)\
                                                      if v in cardapp.card_columns],
                                              return_values=False).choose()
                     if got_back is not None:
-                        cardapp.card_columns = ['title'] + [choices[i] for i in got_back]
+                        cardapp.card_columns = ['title'] + [
+                            choices[i] for i in got_back
+                        ]
                         if 'text' in cardapp.card_columns:
                             cardapp.card_columns.remove('text')
                             cardapp.card_columns.append('text')
@@ -207,14 +216,13 @@ def main(stdscr):
 
 
 def init_app_colors():
-    if curses.COLORS > 8: ## WINDOWS DEBUG
+    if curses.COLORS > 8:  ## WINDOWS DEBUG
         curses.init_pair(1, 228, -1)
         curses.init_pair(2, 228, -1)
         curses.init_pair(3, 228, -1)
         curses.init_pair(4, 228, -1)
         curses.init_pair(5, 228, -1)
         curses.init_pair(6, 228, -1)
-
 
         curses.init_pair(11, 228, -1)
         curses.init_pair(12, 4, -1)
@@ -248,7 +256,6 @@ def init_app_colors():
         # curses.init_pair(4, 228, -1)
         # curses.init_pair(5, 228, -1)
         # curses.init_pair(6, 228, -1)
-
 
         curses.init_pair(11, 3, -1)
         curses.init_pair(12, 4, -1)
@@ -297,7 +304,6 @@ def init_app_colors():
         "hotkey": curses.color_pair(30),
         "greenscreen": curses.color_pair(31),
         "yellowscreen": curses.color_pair(32),
-
     })
 
 
@@ -310,7 +316,7 @@ def open_netrunnerdb(card):
         import subprocess
         subprocess.call(["open", url])
     else:
-        webbrowser.open(url) # Sierra bug not my fault
+        webbrowser.open(url)  # Sierra bug not my fault
 
 
 def box(window, color):
@@ -318,6 +324,7 @@ def box(window, color):
     window.box()
     window.attroff(color)
     window.noutrefresh()
+
 
 class Andeck(object):
     """ Modes:
@@ -329,7 +336,11 @@ class Andeck(object):
     Z = Card zoom mode
     """
 
-    def __init__(self, stdscr, deck_dir=None, deck_file=None, symbols="unicode"):
+    def __init__(self,
+                 stdscr,
+                 deck_dir=None,
+                 deck_file=None,
+                 symbols="unicode"):
         self.screen = stdscr
 
         self.mode = "N"
@@ -372,8 +383,11 @@ class Andeck(object):
         self.filter = cards.CardFilter()
         self.old_filter = self.filter
 
-        self.layout = {"card_display": True, "card_display_loc": "bottom", 
-                "card_display_big": False}
+        self.layout = {
+            "card_display": True,
+            "card_display_loc": "bottom",
+            "card_display_big": False
+        }
         self.search_string = ""
         self.cardlist = cards.search("")
         self.selected_card_index = 0
@@ -388,10 +402,12 @@ class Andeck(object):
             "title", "faction_code", "cost", "type_code", "faction_cost",
             "pack_code", "text"
         ]
-        self.available_columns = self.card_columns + [ 'advancement_cost', 'keywords',
-                                  'agenda_points', 'strength', 'trash_cost', 'memory_cost', 'base_link',
-                                  'quantity', 'deck_limit', 'uniqueness', 'flavor',
-                                  'minimum_deck_size', 'illustrator', 'position', 'influence_limit']
+        self.available_columns = self.card_columns + [
+            'advancement_cost', 'keywords', 'agenda_points', 'strength',
+            'trash_cost', 'memory_cost', 'base_link', 'quantity', 'deck_limit',
+            'uniqueness', 'flavor', 'minimum_deck_size', 'illustrator',
+            'position', 'influence_limit'
+        ]
         self.column_hotkeys = {}
         for col in self.available_columns:
             for c in col:
@@ -415,7 +431,8 @@ class Andeck(object):
             self.deck = cards.Deck.from_file(deck_file)
 
         self.init_windows()
-        self.status("Loaded " + str(len(cards.cards['cards_by_id'])) + " cards.")
+        self.status("Loaded " + str(len(cards.cards['cards_by_id'])) +
+                    " cards.")
 
     def previous_mode(self):
         if len(self.prev_mode) == 0:
@@ -434,17 +451,16 @@ class Andeck(object):
     def render_top(self):
         win = self.top_panel.window()
         y, x = win.getmaxyx()
-        win.addstr(1, 1, " NETRUNNER CONSOLE v0.1",
-                          app_styles["heading"])
+        win.addstr(1, 1, " NETRUNNER CONSOLE v0.1", app_styles["heading"])
         win.addstr(1, x - 12, "? for help",
-                          curses.A_DIM + app_styles["heading"])
+                   curses.A_DIM + app_styles["heading"])
 
     def render_search(self):
         win = self.search_panel.window()
         y, x = win.getmaxyx()
         win.erase()
         win.addstr(1, 2, "> ")
-        win.addstr(self.search_string) # .ljust(x-4))
+        win.addstr(self.search_string)  # .ljust(x-4))
         if self.mode == "I":
             self.search_panel.top()
         #     self.set_cursor(win, 1, len(self.search_string) + 4)
@@ -474,8 +490,8 @@ class Andeck(object):
 
         card_display_width = results_width
 
-        deck_box = curses.newwin(card_table_height,
-                                 deck_box_width, 5, x - deck_box_width)
+        deck_box = curses.newwin(card_table_height, deck_box_width, 5,
+                                 x - deck_box_width)
         self.deck_box_panel = panel.new_panel(deck_box)
 
         if self.deck_box_on:
@@ -494,21 +510,18 @@ class Andeck(object):
         # search_box.addstr(1, 4, "'/' to search", curses.A_DIM)
         box(search_box, app_styles['normal'])
 
-        card_table_win = curses.newwin(card_table_height, results_width,
-                                            5, 1)
+        card_table_win = curses.newwin(card_table_height, results_width, 5, 1)
         card_table_panel = panel.new_panel(card_table_win)
         card_table_subwin = card_table_win.derwin(card_table_height - 2,
-                results_width - 2, 2, 1)
+                                                  results_width - 2, 2, 1)
         box(card_table_win, app_styles['normal'])
 
         card_display_win = None
         card_display_panel = None
         if self.card_display_on:
-            card_display_win = curses.newwin(
-                card_display_height,
-                card_display_width,
-                y - card_display_height - 1,
-                1)
+            card_display_win = curses.newwin(card_display_height,
+                                             card_display_width,
+                                             y - card_display_height - 1, 1)
             box(card_display_win, app_styles['normal'])
             card_display_panel = panel.new_panel(card_display_win)
 
@@ -525,10 +538,9 @@ class Andeck(object):
 
         help_window = None
 
-        self.windows.extend(
-            [status_bar, search_box, card_table_win])
+        self.windows.extend([status_bar, search_box, card_table_win])
         if card_display_win:
-            self.windows.append(card_display_win) # TODO
+            self.windows.append(card_display_win)  # TODO
 
         self.status_bar = status_bar
         self.deck_box = deck_box
@@ -538,7 +550,7 @@ class Andeck(object):
         self.card_display_panel = card_display_panel
         self.card_zoom_panel = card_zoom_panel
 
-        if(self.deck_box_on):
+        if (self.deck_box_on):
             self.update_deck_box()
         self.update_card_table()
         self.update_search()
@@ -546,7 +558,6 @@ class Andeck(object):
         self.status(" ", x)
 
         panel.update_panels()
-
 
     def card_display_toggle(self):
         self.card_display_on = not self.card_display_on
@@ -580,7 +591,8 @@ class Andeck(object):
 
         card_count = 0
         influence = 0
-        wrapper = textwrap.TextWrapper(replace_whitespace=False, width=width - 2)
+        wrapper = textwrap.TextWrapper(
+            replace_whitespace=False, width=width - 2)
 
         if deck is None:
             self.deck = cards.Deck(name="New deck")
@@ -588,35 +600,41 @@ class Andeck(object):
             self.status("New deck")
             # deck_pad.addstr(0, 0, "No deck".center(width-2))
 
-        deck_pad.addstr(0, 0, deck.name.center(width-2), app_styles['card_header'])
-        deck_pad.addstr(2, 0, "Identity: ",  curses.A_BOLD)
+        deck_pad.addstr(0, 0,
+                        deck.name.center(width - 2), app_styles['card_header'])
+        deck_pad.addstr(2, 0, "Identity: ", curses.A_BOLD)
         if deck.identity:
             # deck_pad.addstr("\n".join(wrapper.wrap(deck.identity.title)))
-            deck_pad.addstr("\n".join([line.strip() for line in wrapper.wrap(" "*10
-                                                                             + deck.identity.title)]))
+            deck_pad.addstr("\n".join([
+                line.strip()
+                for line in wrapper.wrap(" " * 10 + deck.identity.title)
+            ]))
         else:
             deck_pad.addstr("(None)")
         i = deck_pad.getyx()[0] + 1
         # i = 3
         card_num = 0
         for type_ in cards.Deck.card_types[deck.side]:
-            cards_in_type = sum([deck.cards_qty[c] for c in deck.cards_by_type[type_]])
+            cards_in_type = sum(
+                [deck.cards_qty[c] for c in deck.cards_by_type[type_]])
             card_count += cards_in_type
             if pretty and len(deck.cards_by_type[type_]) > 0:
-                deck_pad.addstr(i, 1, "\n %s: (%d)" % (
-                    cards.attr_to_readable(type_)[0], cards_in_type),
-                           curses.A_BOLD)
+                deck_pad.addstr(i, 1, "\n %s: (%d)" %
+                                (cards.attr_to_readable(type_)[0],
+                                 cards_in_type), curses.A_BOLD)
                 i += 2
             for card in sorted(deck.cards_by_type[type_]):
 
                 attr = curses.A_NORMAL
                 if card_num == self.selected_deck_card_index and self.mode == "D":
                     attr = curses.A_REVERSE
-                    if i > (self.deck_pad_top + height -5):
+                    if i > (self.deck_pad_top + height - 5):
                         self.deck_pad_top = (i - (height - 5))
                     elif i < self.deck_pad_top:
                         self.deck_pad_top = i
-                deck_pad.addstr(i, 0, ("%dx %s" % (deck.cards_qty[card], card.title)), attr)
+                deck_pad.addstr(i, 0,
+                                ("%dx %s" %
+                                 (deck.cards_qty[card], card.title)), attr)
                 if deck.identity and deck.identity.faction_code != card.faction_code and\
                     card.d.get("faction_cost", False):
                     influence += card.faction_cost * deck.cards_qty[card]
@@ -626,8 +644,10 @@ class Andeck(object):
             if i > self.deck_pad_top + height - 4:
                 win.addstr(height - 3, 1, "(More...)")
 
-        deck_pad.overwrite(win, self.deck_pad_top, 0, 1, 1, height - 4, width - 3)
-        win.addstr(height - 2, 1, ("%d cards / %d influence" % (card_count, influence)).center(width-2),
+        deck_pad.overwrite(win, self.deck_pad_top, 0, 1, 1, height - 4,
+                           width - 3)
+        win.addstr(height - 2, 1, ("%d cards / %d influence" %
+                                   (card_count, influence)).center(width - 2),
                    curses.A_REVERSE)
 
         box(win, app_styles['selected' if self.mode == "D" else "normal"])
@@ -652,27 +672,32 @@ class Andeck(object):
             self.zoom_mode()
         if c == ord('n'):
             if self.deck and not self.deck.saved:
-                if(ConfirmCancel(self.stdscr, "Discard changes to current deck?").show()):
+                if (ConfirmCancel(self.stdscr,
+                                  "Discard changes to current deck?").show()):
                     self.deck = cards.Deck()
                     self.deck.name = "New deck"
                 self.redraw()
-        elif c == ord('l'): # Load
-            filename = FileChooser(self.stdscr, self.deck_dir, "txt", locked=False).choose()
+        elif c == ord('l'):  # Load
+            filename = FileChooser(
+                self.stdscr, self.deck_dir, "txt", locked=False).choose()
             if filename is not None and os.path.exists(filename):
                 self.deck = cards.Deck.from_file(filename)
                 self.status("Loaded " + filename)
-                self.config.set("default-deck-dir", os.path.abspath(os.path.dirname(filename)))
+                self.config.set("default-deck-dir",
+                                os.path.abspath(os.path.dirname(filename)))
             self.card_table_panel.window().touchwin()
-        elif c == ord('r'): # Rename
-            self.deck.name = InputWindow(self.stdscr, prompt="New deck name:").get_string()
-        elif c == ord('s') or c == ord('S'): # Save
+        elif c == ord('r'):  # Rename
+            self.deck.name = InputWindow(
+                self.stdscr, prompt="New deck name:").get_string()
+        elif c == ord('s') or c == ord('S'):  # Save
             self.save_deck(saveas=(c == ord('S')))
         elif c == ord('a') or c == ord('+'):
             card = self.display_card
             if self.deck.add_card(card):
                 self.status("Added " + card.title)
             else:
-                self.status("Card not added - wrong deck type.", app_styles['error'])
+                self.status("Card not added - wrong deck type.",
+                            app_styles['error'])
         elif c == ord('x') or c == ord('-'):
             card = self.display_card
             self.deck.remove_card(card)
@@ -682,13 +707,15 @@ class Andeck(object):
         elif c == ord('j') or c == curses.KEY_DOWN or c == curses.KEY_NPAGE:
             increment = 10 if c == curses.KEY_NPAGE else 1
             self.selected_deck_card_index = min(
-                len(self.deck.cards) - 1, self.selected_deck_card_index + increment)
+                len(self.deck.cards) - 1,
+                self.selected_deck_card_index + increment)
 
         elif c == ord('k') or c == curses.KEY_UP or c == curses.KEY_PPAGE:
             increment = 10 if c == curses.KEY_PPAGE else 1
             if self.selected_card_index == 0:
                 self.deck_pad_top = max(self.deck_pad_top - increment, 0)
-            self.selected_deck_card_index = max(0, self.selected_deck_card_index - increment)
+            self.selected_deck_card_index = max(
+                0, self.selected_deck_card_index - increment)
         elif c == ord('K') or c == ord('g') or c == curses.KEY_HOME:
             self.selected_deck_card_index = 0
             self.deck_pad_top = 0
@@ -730,7 +757,7 @@ class Andeck(object):
                             or self.list_search.lower() in str(self.cardlist[i].text.lower()):
                         self.selected_card_index = i
                         break
-        else: 
+        else:
             if c == 10 or c == 32:
                 self.zoom_mode()
             elif c == ord('n'):
@@ -753,7 +780,8 @@ class Andeck(object):
                 if self.deck.add_card(card):
                     self.status("Added " + card.title)
                 else:
-                    self.status("Card not added - wrong deck type.", app_styles['error'])
+                    self.status("Card not added - wrong deck type.",
+                                app_styles['error'])
                 self.update_deck_box()
             elif c == ord('x') or c == ord('-'):
                 card = self.display_card
@@ -771,19 +799,17 @@ class Andeck(object):
                 self.selected_card_index = len(self.cardlist) - 1
             elif c == curses.KEY_NPAGE:
                 self.selected_card_index = min(
-                    len(self.cardlist) - 1,
-                    self.selected_card_index + self.card_table_panel.window().getmaxyx()[0] -
-                    4)
+                    len(self.cardlist) - 1, self.selected_card_index +
+                    self.card_table_panel.window().getmaxyx()[0] - 4)
             elif c == curses.KEY_PPAGE:
                 self.selected_card_index = max(
-                    0, self.selected_card_index - self.card_table_panel.window().getmaxyx()[0]
-                    + 4)
+                    0, self.selected_card_index -
+                    self.card_table_panel.window().getmaxyx()[0] + 4)
             elif c == ord('g') or c == ord('K') or c == curses.KEY_HOME:
                 self.selected_card_index = 0
 
         self.update_card_table()
         self.render_card_display()
-
 
     def keystroke_filter(self, c):
         if chr(c) in cards.CardFilter.key_to_filter:
@@ -801,8 +827,9 @@ class Andeck(object):
             items = cards.cards['values_by_key']['keywords']
             chosen = [i for i, v in enumerate(cards.cards['values_by_key']['keywords']) if \
                     v in self.filter.filter_strings['keywords']]
-            selected_keywords = MultipleSelector(self.stdscr, items, message="Keywords:",
-                                                 chosen=chosen).choose()
+            selected_keywords = MultipleSelector(
+                self.stdscr, items, message="Keywords:",
+                chosen=chosen).choose()
             if selected_keywords is not None:
                 self.filter.filter_strings['keywords'] = selected_keywords
                 self.filter.update_filter('keywords')
@@ -812,16 +839,25 @@ class Andeck(object):
             return
         elif c == ord("S"):
             # Group by cycle, ordered by date_release
-            items = [(cards.cards['cycles_by_code'][cycle.code].name, [p.name for p in
-                                                    sorted(cards.cards['packs_by_cycle'][cycle.code], key=lambda x: x.position)])
-                     for cycle in sorted(cards.cards['cycles_by_code'].values(), key=lambda x: x.position)]
+            items = [(cards.cards['cycles_by_code'][cycle.code].name, [
+                p.name
+                for p in sorted(
+                    cards.cards['packs_by_cycle'][cycle.code],
+                    key=lambda x: x.position)
+            ])
+                     for cycle in sorted(
+                         cards.cards['cycles_by_code'].values(),
+                         key=lambda x: x.position)]
             # items = [cards.cards['packs_by_code'][c].name for c in cards.cards['values_by_key']['pack_code']]
             chosen = [i for i, v in enumerate(cards.cards['values_by_key']['pack_code']) if \
                       v in self.filter.filter_strings['pack_code']]
-            selected_keywords = MultipleGroupSelector(self.stdscr, items, message="Set:",
-                                                 chosen=chosen).choose()
+            selected_keywords = MultipleGroupSelector(
+                self.stdscr, items, message="Set:", chosen=chosen).choose()
             if selected_keywords is not None:
-                selected_packs = [cards.cards['packs_by_name'][n].code for n in selected_keywords]
+                selected_packs = [
+                    cards.cards['packs_by_name'][n].code
+                    for n in selected_keywords
+                ]
                 self.filter.filter_strings['pack_code'] = selected_packs
                 self.filter.update_filter('pack_code')
             self.render_filter()
@@ -830,6 +866,25 @@ class Andeck(object):
             self.filter.reset()
             self.render_filter()
             return
+        elif c == ord("L"):
+            available_filters = self.config.get("saved-filters")
+            choice = ScrollableSelector(self.stdscr, sorted(list(available_filters.keys())), 
+                    message="Load filter:").choose()
+            if choice is not None:
+                self.filter.reset()
+                self.filter.filter_strings = self.config.get("saved-filters")[choice]
+                self.filter.update_filters()
+                self.render_filter()
+    # def __init__(self, stdscr, items, message="Choose:", return_values=True):
+        elif c == ord("X"):
+            filter_name = InputWindow(
+                self.stdscr, prompt="Save filter as:").get_string()
+            if filter_name is not None:
+                self.filter.name = filter_name
+                saved_filters = self.config.get("saved-filters")
+                saved_filters[filter_name] = deepcopy(
+                    self.filter.filter_strings)
+                self.status("Filter saved as " + filter_name)
         else:
             return
 
@@ -844,7 +899,7 @@ class Andeck(object):
         if c == curses.KEY_BACKSPACE or c == 127:
             if len(self.search_string) > 0:
                 self.search_string = self.search_string[0:-1]
-        elif c == 10: # Enter
+        elif c == 10:  # Enter
             self.normal_mode()
             return
         elif c == 9:  # TAB
@@ -881,7 +936,6 @@ class Andeck(object):
         self.render_search()
         self.status("Search mode")
 
-
     def filter_mode(self):
         self.mode = "F"
         self.old_filter = deepcopy(self.filter)
@@ -895,7 +949,7 @@ class Andeck(object):
         i = 0
         for col in self.available_columns:
             if col in self.card_columns:
-                win.addstr(4 + (i % 9), 2 + (i//9 * 24),  col)
+                win.addstr(4 + (i % 9), 2 + (i // 9 * 24), col)
             else:
                 pass
             i += 1
@@ -917,7 +971,6 @@ class Andeck(object):
                 return k
         return None
 
-
     def _filter_item(self, win, line, col, key, value):
         selected = (value in self.filter.filter_strings[key])
         hk = self._hotkey(key, value)
@@ -935,22 +988,27 @@ class Andeck(object):
         win = self.filter_panel.window()
 
         win.addstr(2, 1, "Faction", curses.A_BOLD)
-        for i, faction in enumerate(["haas-bioroid", "weyland-consortium", "nbn", "jinteki",
-            "neutral-corp"]):
-            self._filter_item(win, i+3, 1, 'faction_code', faction)
+        for i, faction in enumerate([
+                "haas-bioroid", "weyland-consortium", "nbn", "jinteki",
+                "neutral-corp"
+        ]):
+            self._filter_item(win, i + 3, 1, 'faction_code', faction)
 
-        for i, faction in enumerate(["anarch", "criminal", "shaper", "neutral-runner"]):
-            self._filter_item(win, i+3, 17, 'faction_code', faction)
+        for i, faction in enumerate(
+            ["anarch", "criminal", "shaper", "neutral-runner"]):
+            self._filter_item(win, i + 3, 17, 'faction_code', faction)
 
         win.addstr(8, 1, "Side", curses.A_BOLD)
         for i, side in enumerate(["runner", "corp"]):
-            self._filter_item(win, 9, i*15 + 1, 'side_code', side)
+            self._filter_item(win, 9, i * 15 + 1, 'side_code', side)
 
         win.addstr(2, 35, "Type", curses.A_BOLD)
-        for i, type_ in enumerate(["agenda", "asset", "event", "hardware", "ice",
-                                   "identity", "operation", "program", "resource",
-                                   "upgrade"]):
-            self._filter_item(win, i%5 + 3, 35 + (i//5) * 16, 'type_code', type_)
+        for i, type_ in enumerate([
+                "agenda", "asset", "event", "hardware", "ice", "identity",
+                "operation", "program", "resource", "upgrade"
+        ]):
+            self._filter_item(win, i % 5 + 3, 35 +
+                              (i // 5) * 16, 'type_code', type_)
 
         win.addstr(9, 33, "A", app_styles['hotkey'])
         win.addstr(9, 35, "Subtype", curses.A_BOLD)
@@ -974,7 +1032,10 @@ class Andeck(object):
         win.addstr(" Apply filters")
         win.addstr("   <ESC>", curses.A_BOLD)
         win.addstr(" Cancel")
-
+        win.addstr(17, 1, "X", curses.A_BOLD)
+        win.addstr(" Save filter")
+        win.addstr("     L", curses.A_BOLD)
+        win.addstr(" Load filter")
 
         self.filter_panel.top()
 
@@ -994,8 +1055,8 @@ class Andeck(object):
     def zoom_mode(self):
         self.prev_mode.append(self.mode)
         self.mode = "Z"
-        self.do_display_card(self.card_zoom_panel.window(),
-                             self.display_card, verbose=True)
+        self.do_display_card(
+            self.card_zoom_panel.window(), self.display_card, verbose=True)
         self.card_zoom_panel.top()
 
     def help_mode(self):
@@ -1003,7 +1064,9 @@ class Andeck(object):
             self.help_pages = []
             pagename = None
             pagetext = ""
-            with open(os.path.dirname(__file__) + os.sep + "../help/help.txt", "r") as f:
+            with open(
+                    os.path.dirname(__file__) + os.sep + "../help/help.txt",
+                    "r") as f:
                 lines = f.readlines()
             for l in lines:
                 if l.startswith("# "):
@@ -1036,10 +1099,8 @@ class Andeck(object):
         box(win, app_styles['normal'])
         return win
 
-
     def filter_window(self):
         return self.shape_window((30, 70))
-
 
     def card_window(self):
         return self.shape_window((25, 45))
@@ -1059,7 +1120,8 @@ class Andeck(object):
             search_terms = shlex.split(self.search_string)
         except ValueError:
             try:
-                search_terms = shlex.split(self.search_string.replace("'", '').replace('"', ''))
+                search_terms = shlex.split(
+                    self.search_string.replace("'", '').replace('"', ''))
             except ValueError:
                 search_terms = self.search_stringsearch("")
         self.cardlist = cards.advanced_search(search_terms, op="and")
@@ -1077,7 +1139,7 @@ class Andeck(object):
             if i >= len(self.cardlist):
                 break
             row = i
-            cardindex = min(len(self.cardlist)-1, self.display_top_row + i)
+            cardindex = min(len(self.cardlist) - 1, self.display_top_row + i)
             card = self.cardlist[cardindex]
             attr = curses.A_NORMAL
             if self.mode == "C" and cardindex == self.selected_card_index:
@@ -1116,8 +1178,7 @@ class Andeck(object):
                 to_show = to_show[1]
             else:
                 to_show = to_show[0]
-            window.addstr(to_show[0:w].center(w, " "),
-                          attrs)
+            window.addstr(to_show[0:w].center(w, " "), attrs)
             if col != self.card_columns[-1]:
                 window.addstr(" ", attrs - curses.A_UNDERLINE)
 
@@ -1133,11 +1194,12 @@ class Andeck(object):
 
         if self.mode == "C" and self.card_search:
             searchchar = "/" if self.card_search == "forwards" else "?"
-            window.addstr(height - 2, 1, searchchar + self.list_search.ljust(width -2),
-                    curses.A_REVERSE)
+            window.addstr(height - 2, 1,
+                          searchchar + self.list_search.ljust(width - 2),
+                          curses.A_REVERSE)
 
         if self.mode == "C":
-            message = (" " + str(self.selected_card_index+1) + " of " +
+            message = (" " + str(self.selected_card_index + 1) + " of " +
                        str(len(self.cardlist)) + " cards ")
             if window.getmaxyx()[1] > len(message):
                 window.addstr(height - 1, width - (4 + len(message)), "──",
@@ -1146,7 +1208,6 @@ class Andeck(object):
         else:
             window.addstr(height - 1, width - 14, (
                 " " + str(len(self.cardlist)) + " cards ").rjust(12, "─"))
-                                        
 
     def do_display_card(self, win, card, verbose=False):
         h, w = win.getmaxyx()
@@ -1166,12 +1227,14 @@ class Andeck(object):
                    app_styles['cost'])
 
         card_type = card.type_code
-        win.addstr(2, 1, card.printable("type_code", verbose=verbose), curses.A_BOLD)
+        win.addstr(2, 1,
+                   card.printable("type_code", verbose=verbose), curses.A_BOLD)
         stats_string = ""
         if card.d.get("keywords", None):
             win.addstr(": " + card.printable("keywords", verbose=verbose))
         if card_type == "agenda":
-            stats_string = "AC: %d  AP: %d " % (card.advancement_cost, card.agenda_points)
+            stats_string = "AC: %d  AP: %d " % (card.advancement_cost,
+                                                card.agenda_points)
         if card.d.get("strength"):
             stats_string += ("ST: %d " % (card.strength))
         if card.d.get("trash_cost"):
@@ -1180,9 +1243,10 @@ class Andeck(object):
             stats_string += "MU: %d " % (card.memory_cost)
         if card_type == "identity" and "minimum_deck_size" in card.d and "influence_limit" in card.d:
             stats_string += "Deck size: %s  Influence: %s " % (
-                    str(card.minimum_deck_size), (card.influence_limit))
+                str(card.minimum_deck_size), (card.influence_limit))
 
-        win.addstr(3, 1, card.printable("faction_code", verbose=verbose),
+        win.addstr(3, 1,
+                   card.printable("faction_code", verbose=verbose),
                    app_styles.get(card.faction_code, 0))
         influence = card.d.get("faction_cost", None)
 
@@ -1192,13 +1256,12 @@ class Andeck(object):
             win.addstr("●" * (5 - card.faction_cost), app_styles['empty'])
             win.addstr(")")
 
-
         win.addstr(4, 1, stats_string, curses.A_BOLD)
 
         text_win_height = h - 5
         subwin = win.derwin(text_win_height, w - 3, 5, 1)
 
-        wrapper = textwrap.TextWrapper(replace_whitespace=False, width= w - 4)
+        wrapper = textwrap.TextWrapper(replace_whitespace=False, width=w - 4)
         text_lines = card.get_formatted(
             "text", replace_newlines=False).split("\n")
         cardtext = []
@@ -1230,10 +1293,10 @@ class Andeck(object):
 
         style = app_styles['normal']
         if self.mode == "Z":
-            style = app_styles['selected'] # TODO bug
+            style = app_styles['selected']  # TODO bug
         box(win, style)
         set_string = " %s %d " % (
-                cards.cards['packs_by_code'][card.pack_code].name, card.position)
+            cards.cards['packs_by_code'][card.pack_code].name, card.position)
         win.addstr(h - 1, w - (len(set_string)) - 1, set_string, curses.A_DIM)
 
     def render_card(self, win, i, card, gattr):
@@ -1264,7 +1327,7 @@ class Andeck(object):
                         final_attr)  # TODO
                     x += w + 1
                 except curses.error:
-                    pass # OK, don't render it
+                    pass  # OK, don't render it
 
     def format(self, field, card, attr):
         if attr == curses.A_REVERSE:
@@ -1282,7 +1345,8 @@ class Andeck(object):
         if not self.deck:
             return
         if self.deck.filename is None or saveas:
-            to_save = InputWindow(self.stdscr, prompt="Enter filename:").get_string()
+            to_save = InputWindow(
+                self.stdscr, prompt="Enter filename:").get_string()
             if not to_save:
                 return False
             if to_save.startswith("/"):
@@ -1301,8 +1365,9 @@ class Andeck(object):
                 self.status("Deck saved to " + self.deck.filename)
                 return True
             else:
-                self.status("ERROR: Couldn't save deck to " + self.deck.filename,
-                            app_styles['error'])
+                self.status(
+                    "ERROR: Couldn't save deck to " + self.deck.filename,
+                    app_styles['error'])
                 return False
         else:
             self.status("ERROR: No filename selected.", app_styles['error'])
@@ -1310,7 +1375,8 @@ class Andeck(object):
 
     def quit(self):
         if self.deck and not self.deck.saved:
-            if(ConfirmCancel(self.stdscr, "Save changes to current deck?").show()):
+            if (ConfirmCancel(self.stdscr,
+                              "Save changes to current deck?").show()):
                 return self.save_deck()
         self.close_image_window()
         return True
@@ -1343,7 +1409,6 @@ class Andeck(object):
         geometry = cardwindow.close_image_window()
         self.config.set("window-geometry", geometry)
 
-       
     def update_image_window(self):
         if not cardwindow.is_image_window():
             return
@@ -1351,7 +1416,6 @@ class Andeck(object):
         if card is None:
             return
         cardwindow.update_image_window(card.code)
-        
 
     def display_image_web(self):
         card = self.display_card
@@ -1362,21 +1426,27 @@ class Andeck(object):
         if os.path.exists(image_file):
             webbrowser.open("file://" + image_file)
         else:
-            webbrowser.open("https://netrunnerdb.com/card_image/" + str(cardid) + ".png")
+            webbrowser.open("https://netrunnerdb.com/card_image/" + str(cardid)
+                            + ".png")
 
     def show_fluff(self, progress_track):
         stdscr = self.stdscr
         start = 12
-        stdscr.addstr(start, 20, "### WELCOME TO NETRUNNER CONSOLE, $runner! ###", app_styles['greenscreen'] + curses.A_REVERSE)
-        stdscr.addstr(start + 2, 20, "> No card datafiles detected...", app_styles['greenscreen'])
+        stdscr.addstr(start, 20,
+                      "### WELCOME TO NETRUNNER CONSOLE, $runner! ###",
+                      app_styles['greenscreen'] + curses.A_REVERSE)
+        stdscr.addstr(start + 2, 20, "> No card datafiles detected...",
+                      app_styles['greenscreen'])
         stdscr.refresh()
         curses.doupdate()
         time.sleep(1)
-        stdscr.addstr(start + 3, 20, "> Accessing corp network...", app_styles['greenscreen'])
+        stdscr.addstr(start + 3, 20, "> Accessing corp network...",
+                      app_styles['greenscreen'])
         stdscr.refresh()
         curses.doupdate()
         curses.napms(1500)
-        stdscr.addstr(start + 4, 20, "> Bypassing ICE...", app_styles['greenscreen'])
+        stdscr.addstr(start + 4, 20, "> Bypassing ICE...",
+                      app_styles['greenscreen'])
         stdscr.refresh()
         curses.doupdate()
         curses.napms(1750)
@@ -1384,15 +1454,19 @@ class Andeck(object):
         stdscr.refresh()
         curses.doupdate()
         curses.napms(750)
-        stdscr.addstr(start + 5, 20, "> Downloading card data: ", app_styles['greenscreen'])
+        stdscr.addstr(start + 5, 20, "> Downloading card data: ",
+                      app_styles['greenscreen'])
         stdscr.refresh()
         i = 0
-        while(not os.path.exists(self.config.get('card-location') + "/netrunner-cards-json/pack/core.json")):
+        while (not os.path.exists(
+                self.config.get('card-location') +
+                "/netrunner-cards-json/pack/core.json")):
             progress = progress_track.get('progress', None)
             if progress:
-                stdscr.addstr(start + 5, 45, "%02d%%" % (int(100*progress)))
+                stdscr.addstr(start + 5, 45, "%02d%%" % (int(100 * progress)))
             else:
-                stdscr.addstr(start + 5, 45, "."*i, app_styles['greenscreen'] + curses.A_BLINK)
+                stdscr.addstr(start + 5, 45, "." * i,
+                              app_styles['greenscreen'] + curses.A_BLINK)
                 if i == 15:
                     progress_track = self.download_cards(fluff=False)
 
@@ -1405,8 +1479,9 @@ class Andeck(object):
 
     def download_cards(self, fluff=False):
         progress_track = {}
-        t = threading.Thread(target=cards.download_cards, args=([self.config.get('card-location'), 
-            progress_track]))
+        t = threading.Thread(
+            target=cards.download_cards,
+            args=([self.config.get('card-location'), progress_track]))
         t.deamon = True
         t.start()
         if fluff:
@@ -1414,23 +1489,28 @@ class Andeck(object):
         return progress_track
 
     def redownload(self):
-        if(ConfirmCancel(self.stdscr, "Redownload cards?").show()):
+        if (ConfirmCancel(self.stdscr, "Redownload cards?").show()):
             self.normal_mode()
             progress = self.download_cards(fluff=False)
             while progress.get('progress', None) is None:
                 time.sleep(0.3)
             while progress['progress'] < 1.0:
-                self.status("Downloading... %d%%" % (int(100*progress['progress'])))
+                self.status("Downloading... %d%%" %
+                            (int(100 * progress['progress'])))
             self.normal_mode()
             Dialog(self.stdscr, "Cards downloaded successfully.").show()
-            cards.load_cards(card_dir=self.config.get('card-location') + "/netrunner-cards-json")
+            cards.load_cards(card_dir=self.config.get('card-location') +
+                             "/netrunner-cards-json")
             self.search_string = ""
             self.update_search()
         self.redraw()
-        self.status("Loaded " + str(len(cards.cards['cards_by_name'].values())) + " cards.")
+        self.status("Loaded " + str(
+            len(cards.cards['cards_by_name'].values())) + " cards.")
+
 
 if __name__ == "__main__":
     curses.wrapper(main)
+
 
 def startapp(stdscr=None):
     # sys.stderr.close()

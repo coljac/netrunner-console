@@ -8,7 +8,7 @@ class Config(object):
                 "card-location": None,
                 "image-location": None,
                 "default-deck-dir": ".",
-                "saved-filters": []
+                "saved-filters": {}
                 }
 
         if os.path.isdir(os.path.expanduser('~') + "/.config"):
