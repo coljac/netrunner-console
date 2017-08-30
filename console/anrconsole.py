@@ -875,7 +875,8 @@ class Andeck(object):
                 self.filter.filter_strings = self.config.get("saved-filters")[choice]
                 self.filter.update_filters()
                 self.render_filter()
-    # def __init__(self, stdscr, items, message="Choose:", return_values=True):
+        elif c == ord("D"):
+            self.config.get("saved-filters").clear()
         elif c == ord("X"):
             filter_name = InputWindow(
                 self.stdscr, prompt="Save filter as:").get_string()
@@ -1036,6 +1037,8 @@ class Andeck(object):
         win.addstr(" Save filter")
         win.addstr("     L", curses.A_BOLD)
         win.addstr(" Load filter")
+        win.addstr("     D", curses.A_BOLD)
+        win.addstr(" Clear saved filters")
 
         self.filter_panel.top()
 

@@ -194,7 +194,7 @@ class ScrollableSelector(object):
             width = self.get_optimal_width()
         else: 
             width = 10
-        width = max(len(self.message), width)
+        width = max(len(self.message) + 4, width)
         self.win = curses.newwin(height, width, int((y - height)/2), int((x - width)/2))
         self.panel = panel.new_panel(self.win)
         self.panel.top()
@@ -213,6 +213,8 @@ class ScrollableSelector(object):
             return self.get_chosen()
 
     def get_chosen(self):
+        if len(self.items) == 0:
+            return None
         if self.return_values:
             return self.items[self.selected]
         else:
