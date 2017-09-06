@@ -790,6 +790,17 @@ class Andeck(object):
                 self.deck.remove_card(card)
                 self.status("Removed " + card.title)
                 self.update_deck_box()
+            elif c >= ord('0') and c <= ord('3'):
+                if self.deck is None:
+                    self.deck = cards.Deck(name="New Deck")
+                card = self.display_card
+                if card is not None:
+                    qty = 3 - (ord('3') - c)
+                    if qty == 0:
+                        self.deck.remove_card(card, qty=qty)
+                    else:
+                        self.deck.add_card(card, qty=qty)
+                self.update_deck_box()
             elif c == ord('j') or c == curses.KEY_DOWN:
                 self.selected_card_index = min(
                     len(self.cardlist) - 1, self.selected_card_index + 1)
